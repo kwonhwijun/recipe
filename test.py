@@ -12,15 +12,27 @@ def oracleTopd(query):
 
     column_name = exe.description # column 불러오기
     columns=[]
+    
     for i in column_name:
         columns.append(i[0])
     
-    result=pd.DataFrame(row, columns=columns)
     # row, column을 pandas DataFrame으로 나타내기
+    result = pd.DataFrame(row, columns=columns)
+    
+    # dtype clob을 string으로 변환
+    for clob in result.columns:
+        if result[clob].dtype == object:
+            result[clob] = result[clob].astype("string")
+    
+    conn.close()
     
     return result
 
-query = 'select * from nutrient_filter_table where rownum <= 100'
-
+query = 'select * from recipe_data_table where rownum <= 100'
 df = oracleTopd(query)
 df
+
+query = 'select * from nutrient_filter_table where rownum <= 100'
+df = oracleTopd(query)
+df
+
