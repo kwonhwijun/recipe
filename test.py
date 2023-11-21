@@ -1,10 +1,12 @@
 def oracleTopd(query):    
     import oracledb as od
     import pandas as pd
+    import config
 
     # db connection
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
-    conn = od.connect(user='admin', password='INISW2inisw2', dsn='inisw2_high')
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],
+                      dsn = config.DB_CONFIG['dsn'])
     exe = conn.cursor()
     exe.execute(query)
     
