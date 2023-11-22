@@ -1,4 +1,3 @@
 # recipe
 
-하위~! 안녕하세요
-![Alt text](image.png)
+환자를 위한 레시피 추천 
