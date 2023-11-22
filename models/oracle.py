@@ -20,7 +20,7 @@ def oracleTopd(query):
     
     # row, column을 pandas DataFrame으로 나타내기
     result = pd.DataFrame(row, columns=columns)
-    df.rename(mapper=str.lower, axis='columns', inplace=True)
+    result.rename(mapper=str.lower, axis='columns', inplace=True)
     
     # dtype clob을 string으로 변환
     for clob in result.columns:
@@ -32,6 +32,8 @@ def oracleTopd(query):
     return result
 
 query = 'select * from recipe_data_table where rownum <= 100'
+
+
 df = oracleTopd(query)
 df
 
