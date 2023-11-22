@@ -20,6 +20,7 @@ def oracleTopd(query):
     
     # row, column을 pandas DataFrame으로 나타내기
     result = pd.DataFrame(row, columns=columns)
+    df.rename(mapper=str.lower, axis='columns', inplace=True)
     
     # dtype clob을 string으로 변환
     for clob in result.columns:
