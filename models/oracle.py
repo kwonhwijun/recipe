@@ -17,7 +17,7 @@ def oracleTopd(query):
     
     result=pd.DataFrame(row, columns=columns)
     # row, column을 pandas DataFrame으로 나타내기
-    
+    conn.close()
     return result
 
 query = 'select * from nutrient_filter_table where rownum <= 100'
