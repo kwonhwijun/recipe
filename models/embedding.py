@@ -3,6 +3,7 @@ from oracle import oracleTopd
 from tqdm import tqdm
 import ast
 import re
+import pandas as pd
 
 def convert_fraction_to_float(quantity):
     try:
@@ -17,7 +18,6 @@ def convert_unit_to_number(unit):
         '조금' :10
     }
     return unit_conversion.get(unit, 1)
-
 
 def slicefood(data):
     # recipe_ingredients가 NA인 행 제거
