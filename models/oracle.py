@@ -23,15 +23,12 @@ def oracleTopd(query):
     result.rename(mapper=str.lower, axis='columns', inplace=True)
     
     # dtype clob을 string으로 변환
-    for clob in result.columns:
-        if result[clob].dtype == object:
-            result[clob] = result[clob].astype("string")
     
     conn.close()
     
     return result
 
-query = 'select * from recipe_data_table where rownum <= 100'
+query = 'select * from test_recipe_table'
 
 
 df = oracleTopd(query)
