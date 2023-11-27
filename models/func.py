@@ -149,6 +149,21 @@ def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
 # 예시
 # nutri_embedded_recipe = nutri_svd(df, 20)
 
+# 식재료 기반 SVD
+def food_svd(df, n): # df = 입력할 테이블, n = 차원수
+    import pandas as pd
+    import numpy as np
+    from sklearn.decomposition import TruncatedSVD
+
+    nutrients_df = df.drop(columns=['recipe_title'])
+    matrix = nutrients_df.to_numpy()
+
+    svd = TruncatedSVD(n_components=n)
+    result = svd.fit_transform(matrix)
+    return result
+    
+# 예시
+# food_svd_recipe = nutri_svd(df, 20)
 
 # 임베딩 합치기
 def add_embedding(method, food_embedded_recipe, nutri_embedded_recipe, dim1, dim2):  # ['add', 'average', 'concat'] 중 하나 입력하면 입력한 방법으로 임베딩 합쳐줌
