@@ -8,13 +8,11 @@
 
 import oracledb as od
 import pandas as pd
+import numpy as np
 import config
 from tqdm import tqdm
 import ast
 import re
-
-import pandas as pd
-import numpy as np
 from sklearn.decomposition import TruncatedSVD
 
 
@@ -39,16 +37,13 @@ def load_recipe(n =1000):
     conn.close()
     return result
 
-#0 전처리
-def recipe_preprocessing(raw) :
-    # 이상한 문자열 제거
-    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', '') if x is not None else x)
-    
+def recipe_preprocessing(raw) : # 전처리
+  
+    raw = raw.loc[data['recipe_ingredients'].notnull()]   # None 제거
+    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', '') if x is not None else x)  # 이상한 문자열 제거
     raw = raw[['recipe_title', 'recipe_ingredients']]
-
-
-
     return raw
+
 
 
 #1. 식재료 단위 별로 쪼개기
@@ -90,9 +85,9 @@ def split_ingredient(data):
                         if match:
                             ingredient, _, quantity, unit = match.groups()
                             
-                            data.at[idx, f'ingredient{ingredient_count}'] = ingredient
-                            data.at[idx, f'quantity{ingredient_count}'] = quantity
-                            data.at[idx, f'unit{ingredient_count}'] = unit
+                            data.loc[idx, f'ingredient{ingredient_count}'] = ingredient
+                            data.loc[idx, f'quantity{ingredient_count}'] = quantity
+                            data.loc[idx, f'unit{ingredient_count}'] = unit
 
                             ingredient_count += 1
                         else:
@@ -105,6 +100,12 @@ def split_ingredient(data):
     for idx, item in non_matching_items.items():
         print(f'Row {idx}: {item}')
     return data
+
+raw = load_recipe(n = 100)
+data =recipe_preprocessing(raw)
+ingred = split_ingredient(data)
+
+
 
 # 단위를 g수로 변환 
 
@@ -126,10 +127,6 @@ def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
 
 # 코사인 유사도 기반 레시피 나열
 def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으로 표현된 레시피 array, index = 기준 인덱스
-        
-    import pandas as pd
-    import numpy as np
-    
     target_vector = result[index]
     # 타겟 벡터를 2D 배열로 변환
     target_vector = target_vector.reshape(1, -1)
