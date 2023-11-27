@@ -63,8 +63,9 @@ def split_ingredient(data):
     # 패턴과 일치하지 않는 데이터 출력
     for idx, item in non_matching_items.items():
         print(f'Row {idx}: {item}')
+    return data
 
 # 실습
-#recipe = recipe_preprocessing(raw= load_recipe(n=10000))
-#split_ingredient(recipe)
-
+# raw_data = load_recipe(n=10000)
+# recipe = recipe_preprocessing(raw_data)
+# split_ingredient(recipe)
