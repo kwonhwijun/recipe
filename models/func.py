@@ -18,11 +18,6 @@ from sklearn.decomposition import TruncatedSVD
 
 #0. 데이터 불러오기
 def load_recipe(n =1000):
-    '''
-    레시피 데이터 불러오는 함수 (나중에 오라클에서 직접 가져오도록 바꿔야 함)
-    n : int
-        불러오고 싶은 레시피의 수 (Defalut 1000)
-    '''
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # db connection
     conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],  dsn = config.DB_CONFIG['dsn'])
     exe = conn.cursor()
@@ -37,14 +32,17 @@ def load_recipe(n =1000):
     conn.close()
     return result
 
-def recipe_preprocessing(raw) : # 전처리
-  
-    raw = raw.loc[data['recipe_ingredients'].notnull()]   # None 제거
-    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', '') if x is not None else x)  # 이상한 문자열 제거
-    raw = raw[['recipe_title', 'recipe_ingredients']]
-    return raw
+def recipe_preprocessing(raw):
+    data = raw.loc[raw['recipe_ingredients'].notnull()].copy()  # None 값 제거
 
+    def clean_ingredients(ingredients):
+        if ingredients is not None:
+            ingredients = ingredients.replace('\\ufeff', '').replace('\\u200b', '')
+        return ingredients
+    data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
+    result = data[['recipe_title', 'recipe_ingredients']]
 
+    return result
 
 #1. 식재료 단위 별로 쪼개기
 def split_ingredient(data):
@@ -52,24 +50,7 @@ def split_ingredient(data):
         data.loc[:, f'ingredient{i}'] = None
         data.loc[:, f'quantity{i}'] = None
         data.loc[:, f'unit{i}'] = None
-    def convert_fraction_to_float(quantity):
-        from fractions import Fraction
-
-        try:
-            return float(Fraction(quantity))
-        except ValueError:
-            return None 
-    def convert_unit_to_number(unit):
-        '''
-        단위에 따른 g 수 변환
-        '''
-        unit_conversion = {
-            'g': 1,
-            '개': 100,
-            '조금' :10
-        }
-        return unit_conversion.get(unit, 1)
-    
+   
 
 
     # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
@@ -101,13 +82,54 @@ def split_ingredient(data):
         print(f'Row {idx}: {item}')
     return data
 
-raw = load_recipe(n = 100)
-data =recipe_preprocessing(raw)
-ingred = split_ingredient(data)
+# 4. Matrix 변환
 
+def recipe_food_matrix(data):
+    def convert_fraction_to_float(quantity):
+        from fractions import Fraction
 
+        try:
+            return float(Fraction(quantity))
+        except ValueError:
+            return None 
+    def convert_unit_to_number(unit):
+        '''
+        단위에 따른 g 수 변환
+        '''
+        unit_conversion = {
+            'g': 1,
+            '개': 100,
+            '조금' :10
+        }
+        return unit_conversion.get(unit, 1)
+    ingredient_columns = data.filter(like='ingredient').drop(columns=['recipe_ingredients'])
+    all_ingredients = [item for sublist in ingredient_columns.values for item in sublist if pd.notna(item)] 
+    all_ingredients = set()
+    for i in range(1, 21):  
+        all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
-# 단위를 g수로 변환 
+    recipe_ingredients_df = pd.DataFrame(columns=list(all_ingredients))
+
+    recipe_rows = []
+    for idx, row in data.iterrows():
+        recipe_data = {ingredient: 0.0 for ingredient in all_ingredients}  # 모든 식재료를 None으로 초기화
+        for i in range(1, 21):  
+            ingredient = row[f'ingredient{i}']
+            quantity = row[f'quantity{i}']
+            unit = row[f'unit{i}']
+            if pd.notna(ingredient) and pd.notna(quantity):
+                quantity_float = convert_fraction_to_float(quantity)
+                if quantity_float is not None:
+                    unit_number = convert_unit_to_number(unit) if pd.notna(unit) else 1
+                    recipe_data[ingredient] = quantity_float * unit_number
+        recipe_rows.append(recipe_data)
+
+    # 새로운 데이터프레임 생성 (모든 식재료를 열로 가짐)
+    recipe_ingredients_df = pd.concat([pd.DataFrame([row]) for row in recipe_rows], ignore_index=True)
+
+    recipe_ingredients_df = recipe_ingredients_df.astype('float64')
+
+    return recipe_ingredients_df
 
 
 
