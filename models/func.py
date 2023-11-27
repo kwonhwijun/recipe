@@ -212,7 +212,8 @@ result = add_embedding('concat', food_embedded_recipe, nutri_embedded_recipe, 40
 
 # 코사인 유사도 기반 레시피 나열
 def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으로 표현된 레시피 array, index = 기준 인덱스
-        
+    from sklearn.metrics.pairwise import cosine_similarity
+
     import pandas as pd
     import numpy as np
     
