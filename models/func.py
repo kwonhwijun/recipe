@@ -135,7 +135,9 @@ def recipe_food_matrix(data):
 
 # 영양소 기반 SVD
 def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
-
+    import pandas as pd
+    import numpy as np
+    from sklearn.decomposition import TruncatedSVD
 
     nutrients_df = df.drop(columns=['recipe_title'])
     matrix = nutrients_df.to_numpy()
