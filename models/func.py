@@ -65,21 +65,6 @@ def split_ingredient(data):
         print(f'Row {idx}: {item}')
     return data
 
-def convert_fraction_to_float(quantity):
-    from fractions import Fraction
-
-    try:
-        return float(Fraction(quantity))
-    except ValueError:
-        return None 
-    
-def convert_unit_to_number(unit):
-    unit_conversion = {
-        'g': 1,
-        '개': 100,
-        '조금' :10
-    }
-    return unit_conversion.get(unit, 1)
 
 def slicefood(data):
     from oracle import oracleTopd
@@ -87,8 +72,29 @@ def slicefood(data):
     import ast
     import re
     import pandas as pd
+
+    def convert_fraction_to_float(quantity):
+        from fractions import Fraction
+
+        try:
+            return float(Fraction(quantity))
+        except ValueError:
+            return None 
+    
+    # 단위에 따른 g 수
+    def convert_unit_to_number(unit):
+        '''
+        단위에 따른 g 수 변환
+        '''
+        unit_conversion = {
+            'g': 1,
+            '개': 100,
+            '조금' :10
+        }
+        return unit_conversion.get(unit, 1)
+    
     # recipe_ingredients가 NA인 행 제거
-    toy = data.loc[data["recipe_ingredients"].notna(), :]
+    toy = data.copy()
 
     # 문자열 전처리
     toy["recipe_ingredients"] = toy["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', ''))
