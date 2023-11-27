@@ -28,13 +28,8 @@ def oracleTopd(query):
     
     return result
 
-query = 'select * from test_recipe_table'
+#query = 'select * from test_recipe_table'
+#df = oracleTopd(query)
 
-
-df = oracleTopd(query)
-df
-
-query = 'select * from nutrient_filter_table where rownum <= 100'
-df = oracleTopd(query)
-df
-
+#query = 'select * from nutrient_filter_table where rownum <= 100'
+# df = oracleTopd(query)
