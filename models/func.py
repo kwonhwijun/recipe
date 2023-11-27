@@ -7,26 +7,40 @@
 #5. Matrix 3개를 svd
 
 #0. 데이터 불러오기
-def load_recipe(n = 1000): 
+def load_recipe(n =1000):
     '''
     레시피 데이터 불러오는 함수 (나중에 오라클에서 직접 가져오도록 바꿔야 함)
-
-    n : int 
+    n : int
         불러오고 싶은 레시피의 수 (Defalut 1000)
     '''
+    import oracledb as od
     import pandas as pd
-
-    raw = pd.read_csv(r'models/data/RecipeData.csv')
-    data = raw.head(n = n).copy()
-    return data
+    import config
+    # db connection
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],
+                      dsn = config.DB_CONFIG['dsn'])
+    exe = conn.cursor()
+    exe.execute(f'select * from recipe_table where rownum <= {n}')
+    row = exe.fetchall() # row 불러오기
+    column_name = exe.description # column 불러오기
+    columns=[]
+    for i in column_name:
+        columns.append(i[0])
+    # row, column을 pandas DataFrame으로 나타내기
+    result = pd.DataFrame(row, columns=columns)
+    result.rename(mapper=str.lower, axis='columns', inplace=True)
+    conn.close()
+    return result
 
 #0.5 전처리
 def recipe_preprocessing(raw) :
     # 이상한 문자열 제거
-    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', ''))
+    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', '') if x is not None else x)
     raw = raw[['recipe_title', 'recipe_ingredients']]
 
     return raw
+
 
 #1. 식재료 단위 별로 쪼개기
 def split_ingredient(data):
