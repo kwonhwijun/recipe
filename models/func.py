@@ -5,21 +5,24 @@
 #4. 레시피를 MATRIX로 바꾸는데(1. 레시피*식재료  레시피*영양소)
 #5. Matrix 3개를 svd
 
-import pandas as pd
+def load_recipe(n = 1000): 
+    import pandas as pd
 
-
-
-def load_recipe():
-    data = pd.read_csv()
-
+    raw = pd.read_csv(r'models/data/RecipeData.csv')
+    data = raw.head(n = n).copy()
     return data
 
-recipe = load_recipe()
+def recipe_preprocessing(raw) :
+    # 이상한 문자열 제거
+    raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', ''))
+    raw = raw[['recipe_title', 'recipe_ingredients']]
+
+    return raw
 
 
-
-print(recipe.head(3))
-
+recipe_raw = load_recipe()
+recipe = recipe_preprocessing(recipe_raw)
+print(recipe.head(5))
 
 def a2(data):
     return data
