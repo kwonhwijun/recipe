@@ -6,6 +6,13 @@
 #4. 레시피를 MATRIX로 바꾸는데(1. 레시피*식재료  레시피*영양소)
 #5. Matrix 3개를 svd
 
+import oracledb as od
+import pandas as pd
+import config
+from tqdm import tqdm
+import ast
+import re
+
 #0. 데이터 불러오기
 def load_recipe(n =1000):
     '''
@@ -13,9 +20,6 @@ def load_recipe(n =1000):
     n : int
         불러오고 싶은 레시피의 수 (Defalut 1000)
     '''
-    import oracledb as od
-    import pandas as pd
-    import config
     # db connection
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
     conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],
@@ -44,10 +48,6 @@ def recipe_preprocessing(raw) :
 
 #1. 식재료 단위 별로 쪼개기
 def split_ingredient(data):
-    from tqdm import tqdm
-    import ast
-    import re
-
     for i in range(1, 21):
         data.loc[:, f'ingredient{i}'] = None
         data.loc[:, f'quantity{i}'] = None
@@ -56,7 +56,7 @@ def split_ingredient(data):
     # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
     non_matching_items = {}
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
-        if row['recipe_ingredientes'] is not None :
+        if row['recipe_ingredients']:
             ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
             ingredient_count = 1
             for category, items in ingredients_dict.items(): #category : 재료, 양념재료, items: 사과1개, 돼지고기600g
@@ -74,13 +74,15 @@ def split_ingredient(data):
                         else:
                             # 패턴과 일치하지 않는 경우 딕셔너리에 추가
                             non_matching_items[idx] = item
-        else: pass
+        else:
+            pass
 
     # 패턴과 일치하지 않는 데이터 출력
     for idx, item in non_matching_items.items():
         print(f'Row {idx}: {item}')
     return data
 
+# 단위를 g수로 변환 
 def slicefood(data):
     from oracle import oracleTopd
     from tqdm import tqdm
@@ -111,14 +113,8 @@ def slicefood(data):
     # recipe_ingredients가 NA인 행 제거
     toy = data.copy()
 
-    # 문자열 전처리
-    toy["recipe_ingredients"] = toy["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', ''))
 
-    # 새로운 칼럼 생성
-    for i in range(1, 21):
-        toy.loc[:, f'ingredient{i}'] = None
-        toy.loc[:, f'quantity{i}'] = None
-        toy.loc[:, f'unit{i}'] = None
+
 
     # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
     non_matching_items = {}
