@@ -13,6 +13,11 @@ from tqdm import tqdm
 import ast
 import re
 
+import pandas as pd
+import numpy as np
+from sklearn.decomposition import TruncatedSVD
+
+
 #0. 데이터 불러오기
 def load_recipe(n =1000):
     '''
@@ -20,10 +25,8 @@ def load_recipe(n =1000):
     n : int
         불러오고 싶은 레시피의 수 (Defalut 1000)
     '''
-    # db connection
-    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
-    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],
-                      dsn = config.DB_CONFIG['dsn'])
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # db connection
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],  dsn = config.DB_CONFIG['dsn'])
     exe = conn.cursor()
     exe.execute(f'select * from recipe_table where rownum <= {n}')
     row = exe.fetchall() # row 불러오기
@@ -31,8 +34,7 @@ def load_recipe(n =1000):
     columns=[]
     for i in column_name:
         columns.append(i[0])
-    # row, column을 pandas DataFrame으로 나타내기
-    result = pd.DataFrame(row, columns=columns)
+    result = pd.DataFrame(row, columns=columns) # row, column을 pandas DataFrame으로 나타내기
     result.rename(mapper=str.lower, axis='columns', inplace=True)
     conn.close()
     return result
@@ -41,7 +43,10 @@ def load_recipe(n =1000):
 def recipe_preprocessing(raw) :
     # 이상한 문자열 제거
     raw["recipe_ingredients"] = raw["recipe_ingredients"].apply(lambda x: x.replace('\\ufeff', '').replace('\\u200b', '') if x is not None else x)
+    
     raw = raw[['recipe_title', 'recipe_ingredients']]
+
+
 
     return raw
 
@@ -52,7 +57,26 @@ def split_ingredient(data):
         data.loc[:, f'ingredient{i}'] = None
         data.loc[:, f'quantity{i}'] = None
         data.loc[:, f'unit{i}'] = None
+    def convert_fraction_to_float(quantity):
+        from fractions import Fraction
+
+        try:
+            return float(Fraction(quantity))
+        except ValueError:
+            return None 
+    def convert_unit_to_number(unit):
+        '''
+        단위에 따른 g 수 변환
+        '''
+        unit_conversion = {
+            'g': 1,
+            '개': 100,
+            '조금' :10
+        }
+        return unit_conversion.get(unit, 1)
     
+
+
     # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
     non_matching_items = {}
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
@@ -83,74 +107,12 @@ def split_ingredient(data):
     return data
 
 # 단위를 g수로 변환 
-def slicefood(data):
-    from oracle import oracleTopd
-    from tqdm import tqdm
-    import ast
-    import re
-    import pandas as pd
 
-    def convert_fraction_to_float(quantity):
-        from fractions import Fraction
-
-        try:
-            return float(Fraction(quantity))
-        except ValueError:
-            return None 
-    
-    # 단위에 따른 g 수
-    def convert_unit_to_number(unit):
-        '''
-        단위에 따른 g 수 변환
-        '''
-        unit_conversion = {
-            'g': 1,
-            '개': 100,
-            '조금' :10
-        }
-        return unit_conversion.get(unit, 1)
-    
-    # recipe_ingredients가 NA인 행 제거
-    toy = data.copy()
-
-
-
-
-    # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
-    non_matching_items = {}
-
-    # 식재료 칼럼 쪼개기
-    for idx, row in tqdm(toy.iterrows(), total=toy.shape[0]):
-        ingredients_dict = ast.literal_eval(row["recipe_ingredients"])
-        ingredient_count = 1
-        for category, items in ingredients_dict.items():
-            if items:
-                for item in items:
-                    match = re.match(r'([가-힣]+(\([가-힣]+\))?)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item)
-                    if match:
-                        ingredient, _, quantity, unit = match.groups()
-
-                        toy.at[idx, f'ingredient{ingredient_count}'] = ingredient
-                        toy.at[idx, f'quantity{ingredient_count}'] = quantity
-                        toy.at[idx, f'unit{ingredient_count}'] = unit
-
-                        ingredient_count += 1
-                    else:
-                        non_matching_items[idx] = item
-
-    # 패턴과 일치하지 않는 데이터 출력
-    if non_matching_items:
-        for idx, item in non_matching_items.items():
-            print(f'Row {idx}: {item}')
-
-    return toy
 
 
 # 영양소 기반 SVD
 def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
-    import pandas as pd
-    import numpy as np
-    from sklearn.decomposition import TruncatedSVD
+
 
     nutrients_df = df.drop(columns=['recipe_title'])
     matrix = nutrients_df.to_numpy()
