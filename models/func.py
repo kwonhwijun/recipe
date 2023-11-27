@@ -42,12 +42,12 @@ def split_ingredient(data):
     # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
     non_matching_items = {}
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
-        ingredients_dict = ast.literal_eval(row["recipe_ingredients"])
+        ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
         ingredient_count = 1
-        for category, items in ingredients_dict.items():
+        for category, items in ingredients_dict.items(): #category : 재료, 양념재료, items: 사과1개, 돼지고기600g
             if items:  # 아이템이 존재하는 경우
                 for item in items:
-                    match = re.match(r'([가-힣]+(\([가-힣]+\))?)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item)
+                    match = re.match(r'([가-힣a-zA-Z]+(\([가-힣]+\))?)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item) # 정규식
                     if match:
                         ingredient, _, quantity, unit = match.groups()
                         
