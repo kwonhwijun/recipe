@@ -167,10 +167,10 @@ def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할
         num_components = n
         U, Sigma, Vt = svds(matrix, k=num_components)
         matrix_tr = np.dot(np.dot(U,np.diag(Sigma)), Vt)# output of TruncatedSVD
-        return Sigma
+        return U, Sigma, Vt
 
 # 예시
-# nutri_svd('scipy', df, 10)
+# a,b,c = nutri_svd('scipy', df, 10)
 
 # 식재료 기반 SVD
 def food_svd(df, n): # df = 입력할 테이블, n = 차원수
