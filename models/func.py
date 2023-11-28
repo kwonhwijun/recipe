@@ -83,7 +83,6 @@ def split_ingredient(data):
     return data
 
 # 4. Matrix 변환
-
 def recipe_food_matrix(data):
     def convert_fraction_to_float(quantity):
         from fractions import Fraction
@@ -138,8 +137,10 @@ def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
     import pandas as pd
     import numpy as np
     from sklearn.decomposition import TruncatedSVD
-
-    nutrients_df = df.drop(columns=['recipe_title'])
+    if 'recipe_title' in df.columns :
+        nutrients_df = df.drop(columns=['recipe_title'])
+    else :
+        nutrients_df = df
     matrix = nutrients_df.to_numpy()
 
     svd = TruncatedSVD(n_components=n)
@@ -154,8 +155,10 @@ def food_svd(df, n): # df = 입력할 테이블, n = 차원수
     import pandas as pd
     import numpy as np
     from sklearn.decomposition import TruncatedSVD
-
-    nutrients_df = df.drop(columns=['recipe_title'])
+    if 'recipe_title' in df.columns :
+        nutrients_df = df.drop(columns=['recipe_title'])
+    else :
+        nutrients_df = df
     matrix = nutrients_df.to_numpy()
 
     svd = TruncatedSVD(n_components=n)
@@ -205,7 +208,7 @@ def add_embedding(method, food_embedded_recipe, nutri_embedded_recipe, dim1, dim
 
         return result_numpy  # 결과의 형태 출력
 # 예시
-result = add_embedding('concat', food_embedded_recipe, nutri_embedded_recipe, 40, 20) 
+# result = add_embedding('concat', food_embedded_recipe, nutri_embedded_recipe, 40, 20) 
 
 # 코사인 유사도 기반 레시피 나열
 def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으로 표현된 레시피 array, index = 기준 인덱스
@@ -230,7 +233,7 @@ def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으�
     selected_titles = df.loc[indexes, 'recipe_title']
     return selected_titles
 # 예시
-sorted_recipe = recipe_cos(df, nutri_embedded_recipe, 1)
+# sorted_recipe = recipe_cos(df, nutri_embedded_recipe, 1)
 
 # 실습
 # raw_data = load_recipe(n=10000)
