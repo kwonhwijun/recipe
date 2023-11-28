@@ -28,7 +28,6 @@ def load_recipe(n =1000):
 
 def recipe_preprocessing(raw):
     data = raw.loc[raw['recipe_ingredients'].notnull()].copy()  # None 값 제거
-
     def clean_ingredients(ingredients):
         if ingredients is not None:
             ingredients = ingredients.replace('\\ufeff', '').replace('\\u200b', '')
