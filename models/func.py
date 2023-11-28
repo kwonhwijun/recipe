@@ -15,6 +15,8 @@ import ast
 import re
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
+from scipy.sparse.linalg import svds
+from scipy.linalg import svd
 
 #0. 데이터 불러오기
 def load_recipe(n =1000):
@@ -133,20 +135,36 @@ def recipe_food_matrix(data):
 
 
 # 영양소 기반 SVD
-def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
-    from sklearn.decomposition import TruncatedSVD
-    if 'recipe_title' in df.columns :
-        nutrients_df = df.drop(columns=['recipe_title'])
-    else :
-        nutrients_df = df
-    matrix = nutrients_df.to_numpy()
+def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할 테이블, n = 차원수
+    if method == 'sklearn':
+        import pandas as pd
+        import numpy as np
+        from sklearn.decomposition import TruncatedSVD
 
-    svd = TruncatedSVD(n_components=n)
-    result = svd.fit_transform(matrix)
-    return result
+        nutrients_df = df.drop(columns=['recipe_title'])
+        matrix = nutrients_df.to_numpy()
+
+        svd = TruncatedSVD(n_components=n)
+        result = svd.fit_transform(matrix)
+        return result
+
+    # scipy
+    elif method == 'scipy':
+        import numpy as np
+        from scipy.sparse.linalg import svds
+        from scipy.linalg import svd
+
+        nutrients_df = df.drop(columns=['recipe_title'])
+        matrix = nutrients_df.to_numpy()
+        matrix = matrix.astype(float) 
+
+        num_components = n
+        U, Sigma, Vt = svds(matrix, k=num_components)
+        matrix_tr = np.dot(np.dot(U,np.diag(Sigma)), Vt)# output of TruncatedSVD
+        return Sigma
 
 # 예시
-# nutri_embedded_recipe = nutri_svd(df, 20)
+# nutri_svd('scipy', df, 10)
 
 # 식재료 기반 SVD
 def food_svd(df, n): # df = 입력할 테이블, n = 차원수
