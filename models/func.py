@@ -1,11 +1,3 @@
-#0. 데이터 불러오기
-#0.5 데이터 전처리
-#1. 식재료 단위 별로 쪼개기
-#2. 단위에 따른 g수 +계산
-#3. 각 레시피의 영양소 할당
-#4. 레시피를 MATRIX로 바꾸는데(1. 레시피*식재료  레시피*영양소)
-#5. Matrix 3개를 svd
-
 import oracledb as od
 import pandas as pd
 import numpy as np
@@ -58,7 +50,6 @@ def split_ingredient(data):
         data.loc[:, f'quantity{i}'] = None
         data.loc[:, f'unit{i}'] = None
    
-
     non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
 
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
