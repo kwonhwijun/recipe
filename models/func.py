@@ -36,9 +36,14 @@ def recipe_preprocessing(raw):
     def not_empty_ingredients(row):
         return row['recipe_ingredients'].strip() != '{}' # 결측치 제거
 
-    data = data[data.apply(not_empty_ingredients, axis=1)]
     data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
+    data = data[data.apply(not_empty_ingredients, axis=1)]
     result = data[['recipe_title', 'recipe_ingredients']]
+
+    title_idx = result[result['recipe_title'].isnull()].index
+    del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index
+    result.drop(del_idx, inplace=True)
+    result.drop(title_idx, inplace=True)
 
     return result
 
