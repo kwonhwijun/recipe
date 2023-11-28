@@ -14,7 +14,7 @@ from tqdm import tqdm
 import ast
 import re
 from sklearn.decomposition import TruncatedSVD
-
+from sklearn.metrics.pairwise import cosine_similarity
 
 #0. 데이터 불러오기
 def load_recipe(n =1000):
@@ -134,8 +134,6 @@ def recipe_food_matrix(data):
 
 # 영양소 기반 SVD
 def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
-    import pandas as pd
-    import numpy as np
     from sklearn.decomposition import TruncatedSVD
     if 'recipe_title' in df.columns :
         nutrients_df = df.drop(columns=['recipe_title'])
@@ -152,8 +150,6 @@ def nutri_svd(df, n): # df = 입력할 테이블, n = 차원수
 
 # 식재료 기반 SVD
 def food_svd(df, n): # df = 입력할 테이블, n = 차원수
-    import pandas as pd
-    import numpy as np
     from sklearn.decomposition import TruncatedSVD
     if 'recipe_title' in df.columns :
         nutrients_df = df.drop(columns=['recipe_title'])
@@ -170,8 +166,6 @@ def food_svd(df, n): # df = 입력할 테이블, n = 차원수
 
 # 임베딩 합치기
 def add_embedding(method, food_embedded_recipe, nutri_embedded_recipe, dim1, dim2):  # ['add', 'average', 'concat'] 중 하나 입력하면 입력한 방법으로 임베딩 합쳐줌
-    import numpy as np
-    
     if method == 'add':
         result = food_embedded_recipe + nutri_embedded_recipe
         return result
@@ -212,11 +206,6 @@ def add_embedding(method, food_embedded_recipe, nutri_embedded_recipe, dim1, dim
 
 # 코사인 유사도 기반 레시피 나열
 def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으로 표현된 레시피 array, index = 기준 인덱스
-    from sklearn.metrics.pairwise import cosine_similarity
-
-    import pandas as pd
-    import numpy as np
-    
     target_vector = result[index]
     # 타겟 벡터를 2D 배열로 변환
     target_vector = target_vector.reshape(1, -1)
