@@ -125,8 +125,8 @@ def recipe_food_matrix(data):
 
     # 새로운 데이터프레임 생성 (모든 식재료를 열로 가짐)
     recipe_ingredients_df = pd.concat([pd.DataFrame([row]) for row in recipe_rows], ignore_index=True)
-
     recipe_ingredients_df = recipe_ingredients_df.astype('float64')
+    recipe_ingredients_df['recipe_title'] = data['recipe_title']
 
     return recipe_ingredients_df
 
