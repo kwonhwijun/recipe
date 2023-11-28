@@ -39,6 +39,11 @@ def recipe_preprocessing(raw):
         if ingredients is not None:
             ingredients = ingredients.replace('\\ufeff', '').replace('\\u200b', '')
         return ingredients
+
+    def not_empty_ingredients(row):
+        return row['recipe_ingredients'].strip() != '{}' # 결측치 제거
+
+    data = data[data.apply(not_empty_ingredients, axis=1)]
     data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
     result = data[['recipe_title', 'recipe_ingredients']]
 
@@ -52,9 +57,8 @@ def split_ingredient(data):
         data.loc[:, f'unit{i}'] = None
    
 
+    non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
 
-    # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
-    non_matching_items = {}
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
         if row['recipe_ingredients']:
             ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
@@ -77,10 +81,12 @@ def split_ingredient(data):
         else:
             pass
 
-    # 패턴과 일치하지 않는 데이터 출력
+    # 패턴과 일치하지 않는 데이터 출력 X => 날려버리기!
     for idx, item in non_matching_items.items():
         print(f'Row {idx}: {item}')
     return data
+
+    #재료가 ingredient1부터 안 들어가서 null값인 거 날려버리기!
 
 # 4. Matrix 변환
 def recipe_food_matrix(data):
