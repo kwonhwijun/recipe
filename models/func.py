@@ -15,7 +15,7 @@ def load_recipe(n =1000):
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # db connection
     conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'],  dsn = config.DB_CONFIG['dsn'])
     exe = conn.cursor()
-    exe.execute(f'select * from recipe_table where rownum <= {n}')
+    exe.execute(f'select * from (select * from recipe_table order by row_cnt asc) where row_cnt <= {n}')
     row = exe.fetchall() # row 불러오기
     column_name = exe.description # column 불러오기
     columns=[]
