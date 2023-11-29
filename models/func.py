@@ -54,7 +54,7 @@ def recipe_preprocessing(raw):
 
     data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
     data = data[data.apply(not_empty_ingredients, axis=1)]
-    result = data[['recipe_title', 'recipe_ingredients']]
+    result = data[['recipe_title', 'recipe_ingredients']].copy()
 
     title_idx = result[result['recipe_title'].isnull()].index
     del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index
@@ -94,16 +94,13 @@ def split_ingredient(data):
         else:
             pass
 
-    # 패턴과 일치하지 않는 데이터 출력 X => 날려버리기!
-    for idx, item in non_matching_items.items():
-        print(f'Row {idx}: {item}')
     return data
 
     #재료가 ingredient1부터 안 들어가서 null값인 거 날려버리기!
 
 # 4. Matrix 변환
 def recipe_food_matrix(data):
-    data.index = range(len(data))
+    data.index = range(len(data)) # index 초기화
     def convert_fraction_to_float(quantity):
         from fractions import Fraction
 
@@ -130,7 +127,7 @@ def recipe_food_matrix(data):
     recipe_ingredients_df = pd.DataFrame(columns=col_name)
 
     recipe_rows = []
-    for idx, row in data.iterrows():
+    for idx, row in tqdm(data.iterrows(), total = data.shape[0]) :
         recipe_data = {ingredient: 0.0 for ingredient in all_ingredients}  # 모든 식재료를 None으로 초기화
         for i in range(1, 21):  
             ingredient = row[f'ingredient{i}']
@@ -157,8 +154,7 @@ def recipe_food_matrix(data):
 # 재료 쪼갠 후 레시피별 영양소 나오는 테이블
 def recipe_nutri(new_recipe1, nutri_df):
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
-    file_path = r"C:\Users\admin\OneDrive\바탕 화면\change.txt"
-
+    file_path = r"models/data/change.txt"
     unit_conversion = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -424,3 +420,44 @@ def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으�
 ## 기타 함수
 # -단위의 개수 세는 함수
 # -식재료 종류 세느 ㄴ함수 
+
+# 한번에 매트릭스까지 처리하는 함수
+def load_matrix(n = 1000):
+    raw = load_recipe(n)
+    print("load completed")
+    raw_processed = recipe_preprocessing(raw)
+    print("Preprocessing completed")
+    recipe = split_ingredient(raw_processed)
+    print("Ingredient split completed")
+    result = recipe_food_matrix(recipe)
+    print("Matrix creation completed")
+    return result 
+
+
+def not_matching(n=100):
+    raw = load_recipe(n)
+    raw_processed = recipe_preprocessing(raw)
+    data = raw_processed.copy()
+    for i in range(1, 21):
+        data.loc[:, f'ingredient{i}'] = None
+        data.loc[:, f'quantity{i}'] = None
+        data.loc[:, f'unit{i}'] = None
+   
+    non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
+
+    for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
+        if row['recipe_ingredients']:
+            ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
+            ingredient_count = 1
+            for category, items in ingredients_dict.items(): #category : 재료, 양념재료, items: 사과1개, 돼지고기600g
+                if items:  # 아이템이 존재하는 경우
+                    for item in items:
+                        match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item) # 정규식
+                        if match:
+                            pass
+                        else:
+                            # 패턴과 일치하지 않는 경우 딕셔너리에 추가
+                            non_matching_items[idx] = item
+        else:
+            pass
+    return non_matching_items
