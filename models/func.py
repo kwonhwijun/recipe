@@ -152,7 +152,7 @@ def recipe_food_matrix(data):
     recipe_ingredients_df['recipe_title'] = data['recipe_title']
 
     # RECIPE_TITLE 컬럼을 젤 앞으로
-    recipe_ingredients_df = recipe_ingredients_df[['recipe_title'] + [col for col in recipe_ingredients_df.columns if col != 'RECIPE_TITLE']]
+    recipe_ingredients_df = recipe_ingredients_df[['recipe_title'] + [col for col in recipe_ingredients_df.columns if col != 'recipe_title']]
 
     return recipe_ingredients_df
 
