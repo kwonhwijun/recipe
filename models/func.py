@@ -161,9 +161,11 @@ def recipe_food_matrix(data):
 
 #---------------------------------------------------------------------------------------------------#
 # 재료 쪼갠 후 레시피별 영양소 나오는 테이블
+
+
 def recipe_nutri(new_recipe1, nutri_df):
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
-    file_path = r"models/data/change.txt"
+    file_path = r"C:\Users\HwijunKwon\github\recipe\models\data\change.txt"
     unit_conversion = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
