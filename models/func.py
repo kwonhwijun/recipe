@@ -26,7 +26,7 @@ def load_recipe(n =1000):
     conn.close()
     return result
 
-def load_recipe_tiny(n=1000):
+def load_recipe_tiny(n=100):
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # DB 연결
     conn = od.connect(user=config.DB_CONFIG['user'], password=config.DB_CONFIG['password'], dsn=config.DB_CONFIG['dsn'])
     exe = conn.cursor()
