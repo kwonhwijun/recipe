@@ -3,3 +3,6 @@ test/
 models/data/RecipeData.csv
 config.py
 models/test.ipynb
+models/231129.ipynb
+models/231129_SVD.ipynb
+models/231129.ipynb

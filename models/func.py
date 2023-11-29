@@ -42,9 +42,6 @@ def select_table(query):
     conn.close()
     return result
 
-
-
-
 def recipe_preprocessing(raw):
     data = raw.loc[raw['recipe_ingredients'].notnull()].copy()  # None 값 제거
     def clean_ingredients(ingredients):
