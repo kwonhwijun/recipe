@@ -106,6 +106,7 @@ def split_ingredient(data):
 
 # 4. Matrix 변환
 def recipe_food_matrix(data):
+    data.index = range(len(data))
     def convert_fraction_to_float(quantity):
         from fractions import Fraction
 
@@ -124,12 +125,12 @@ def recipe_food_matrix(data):
         }
         return unit_conversion.get(unit, 1)
     ingredient_columns = data.filter(like='ingredient').drop(columns=['recipe_ingredients'])
-    all_ingredients = [item for sublist in ingredient_columns.values for item in sublist if pd.notna(item)] 
     all_ingredients = set()
     for i in range(1, 21):  
         all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
-    recipe_ingredients_df = pd.DataFrame(columns=list(all_ingredients))
+    col_name = ['recipe_title'].append(list(all_ingredients))
+    recipe_ingredients_df = pd.DataFrame(columns=col_name)
 
     recipe_rows = []
     for idx, row in data.iterrows():
@@ -148,10 +149,10 @@ def recipe_food_matrix(data):
     # 새로운 데이터프레임 생성 (모든 식재료를 열로 가짐)
     recipe_ingredients_df = pd.concat([pd.DataFrame([row]) for row in recipe_rows], ignore_index=True)
     recipe_ingredients_df = recipe_ingredients_df.astype('float64')
-    recipe_ingredients_df['RECIPE_TITLE'] = data['recipe_title']
-    
+    recipe_ingredients_df['recipe_title'] = data['recipe_title']
+
     # RECIPE_TITLE 컬럼을 젤 앞으로
-    recipe_ingredients_df = recipe_ingredients_df[['RECIPE_TITLE'] + [col for col in recipe_ingredients_df.columns if col != 'RECIPE_TITLE']]
+    recipe_ingredients_df = recipe_ingredients_df[['recipe_title'] + [col for col in recipe_ingredients_df.columns if col != 'recipe_title']]
 
     return recipe_ingredients_df
 
