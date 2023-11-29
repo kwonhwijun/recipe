@@ -65,10 +65,10 @@ def recipe_preprocessing(raw):
     data = data[data.apply(not_empty_ingredients, axis=1)]
     result = data[['recipe_title', 'recipe_ingredients']].copy()
 
-    title_idx = result[result['recipe_title'].isnull()].index
-    del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index
-    result.drop(del_idx, inplace=True)
-    result.drop(title_idx, inplace=True)
+    title_idx = result[result['recipe_title'].isnull()].index # title이 null값인 행 인덱스 찾기
+    del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index #소시지~ 로 시작해서 오류 일으키는 행 인덱스 찾기
+    result.drop(del_idx, inplace=True) # 오류 일으키는 행 제거
+    result.drop(title_idx, inplace=True) # title null값인 행 제거
 
     return result
 
