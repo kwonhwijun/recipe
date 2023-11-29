@@ -26,6 +26,15 @@ def load_recipe(n =1000):
     conn.close()
     return result
 
+def load_recipe_tiny(n=1000):
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # DB 연결
+    conn = od.connect(user=config.DB_CONFIG['user'], password=config.DB_CONFIG['password'], dsn=config.DB_CONFIG['dsn'])
+    exe = conn.cursor()
+    exe.execute(f'SELECT * FROM (SELECT * FROM recipe_table ORDER BY row_cnt ASC) WHERE row_cnt <= {n}')
+    result = pd.DataFrame(exe.fetchall(), columns=[col[0].lower() for col in exe.description])  # row와 column 이름을 가져와 DataFrame 생성
+    conn.close()
+    return result
+
 # query문 직접 작성해서 select 할때 사용
 def select_table(query):
     od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # db connection
