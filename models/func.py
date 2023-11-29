@@ -32,7 +32,7 @@ def load_recipe_tiny(n=100):
     exe = conn.cursor()
     exe.execute(f'SELECT * FROM (SELECT * FROM recipe_table ORDER BY row_cnt ASC) WHERE row_cnt <= {n}')
     result = pd.DataFrame(exe.fetchall(), columns=[col[0].lower() for col in exe.description])  # row와 column 이름을 가져와 DataFrame 생성
-    conn.close() #실험중
+    conn.close() #실험 # 수정
     return result
 
 # query문 직접 작성해서 select 할때 사용
