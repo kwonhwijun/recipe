@@ -74,38 +74,40 @@ def recipe_preprocessing(raw):
 
 #1. 식재료 단위 별로 쪼개기
 def split_ingredient(data):
-    for i in range(1, 21):
-        data.loc[:, f'ingredient{i}'] = None
-        data.loc[:, f'quantity{i}'] = None
-        data.loc[:, f'unit{i}'] = None
-   
+    num_ingredients = 74
+
+    for i in range(1, num_ingredients + 1):
+        data[f'ingredient{i}'] = None
+        data[f'quantity{i}'] = None
+        data[f'unit{i}'] = None
+
     non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
 
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
         if row['recipe_ingredients']:
             ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
             ingredient_count = 1
-            for category, items in ingredients_dict.items(): #category : 재료, 양념재료, items: 사과1개, 돼지고기600g
-                if items:  # 아이템이 존재하는 경우
-                    for item in items:
-                        match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item) # 정규식
-                        if match:
-                            ingredient, _, quantity, unit = match.groups()
-                            
-                            data.loc[idx, f'ingredient{ingredient_count}'] = ingredient
-                            data.loc[idx, f'quantity{ingredient_count}'] = quantity
-                            data.loc[idx, f'unit{ingredient_count}'] = unit
 
-                            ingredient_count += 1
-                        else:
-                            # 패턴과 일치하지 않는 경우 딕셔너리에 추가
-                            non_matching_items[idx] = item
-        else:
-            pass
+            for items in ingredients_dict.values():
+                for item in items:
+                    match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item)
+
+                    if match:
+                        ingredient, _, quantity, unit = match.groups()
+
+                        data.at[idx, f'ingredient{ingredient_count}'] = ingredient
+                        data.at[idx, f'quantity{ingredient_count}'] = quantity
+                        data.at[idx, f'unit{ingredient_count}'] = unit
+
+                        ingredient_count += 1
+                    else:
+                        non_matching_items[idx] = item
+
+    data = data.drop([k for k, v in non_matching_items.items() if v != ''])
+    data = data.copy()
+    data.drop(['ingredient75', 'quantity75', 'unit75', 'ingredient76', 'quantity76', 'unit76', 'ingredient77', 'quantity77', 'unit77', 'ingredient78', 'quantity78', 'unit78', 'ingredient79', 'quantity79', 'unit79'], axis = 1, inplace = True)
 
     return data
-
-    #재료가 ingredient1부터 안 들어가서 null값인 거 날려버리기!
 
 # 4. Matrix 변환
 def recipe_food_matrix(data):
