@@ -162,6 +162,13 @@ def recipe_food_matrix(data):
 #---------------------------------------------------------------------------------------------------#
 # 재료 쪼갠 후 레시피별 영양소 나오는 테이블
 
+def recipe_nutri(new_recipe1, nutri_df):
+    file_path = r"models/data/change.txt"
+    unit_conversion = {}
+    with open(file_path, 'r', encoding='utf-8') as file:
+        unit_conversion = {line.split()[0]: line.split()[1] for line in file if line.split()[1].isdigit()}
+
+
 
 def recipe_nutri(new_recipe1, nutri_df):
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
@@ -472,3 +479,147 @@ def not_matching(n=100):
         else:
             pass
     return non_matching_items
+
+
+def recipe_nutri_tiny(new_recipe1, nutri_df):
+    # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
+    file_path = r"C:\Users\HwijunKwon\github\recipe\models\data\change.txt"
+    unit_conversion = {}
+    with open(file_path, 'r', encoding='utf-8') as file:
+        unit_conversion = {line.split()[0]: line.split()[1] for line in file if line.split()[1].isdigit()}
+
+    # DataFrame 생성
+    df11 = pd.DataFrame(list(unit_conversion.items()), columns=['unit', 'value'])
+
+    # DataFrame을 딕셔너리로 변환
+    df11_dict = df11.set_index('unit')['value'].to_dict()
+
+    # 딕셔너리의 값을 숫자로 변환하여 새로운 딕셔너리 생성
+    df_dict = {key: int(value) if value is not None else None for key, value in df11_dict.items()}
+    df_dict
+
+    # unit{i} 컬럼에 딕셔너리로 지정한 key : value값으로 치환
+    for i in range(1, 15):
+        column_name = f'unit{i}'
+        if column_name in new_recipe1.columns:
+            new_recipe1[column_name] = new_recipe1[column_name].apply(lambda x: df_dict.get(x) if pd.notna(x) and not re.match(r'\d+[^\d]*$', str(x)) else x)
+    
+    # new_recipe1에 recipe_title, ingredient{i}, quantity{i}, unit{i}만 저장
+    new_recipe1 = new_recipe1[['recipe_title'] + [f'{name}{i}' for i in range(1, 14) for name in ['ingredient', 'quantity', 'unit']]]
+    new_recipe1 = new_recipe1.copy()
+    # quantity를 숫자로 변환 및 multi 계산
+    for i in range(1, 14):
+        column_quantity = f'quantity{i}'
+        column_unit = f'unit{i}'
+        column_multi = f'multi{i}'
+
+        # quantity를 숫자로 변환
+        new_recipe1[column_quantity] = pd.to_numeric(new_recipe1[column_quantity], errors='coerce').fillna(0).astype('float16')
+
+        # multi 계산 및 할당
+        new_recipe1[column_multi] = new_recipe1[column_quantity] * new_recipe1[column_unit]
+
+    # 필요없는 quantity, unit 컬럼 삭제
+    for i in range(1, 14):
+        new_recipe1.drop(columns=[f'quantity{i}', f'unit{i}'], inplace=True)
+
+    
+    # new_recipe1의 컬럼 재배열 (recipe_title ingredient1 multi1 ... 식으로)
+    new_columns = [
+        'recipe_title', 
+        'ingredient1', 'multi1', 
+        'ingredient2', 'multi2', 
+        'ingredient3', 'multi3', 
+        'ingredient4', 'multi4', 
+        'ingredient5', 'multi5', 
+        'ingredient6', 'multi6', 
+        'ingredient7', 'multi7', 
+        'ingredient8', 'multi8', 
+        'ingredient9', 'multi9', 
+        'ingredient10', 'multi10', 
+        'ingredient11', 'multi11', 
+        'ingredient12', 'multi12', 
+        'ingredient13', 'multi13'
+    ]
+    new_recipe1 = new_recipe1[new_columns]
+    
+    # 영양소 테이블의 컬럼명 변경
+    nutri_df.rename(columns={'대표식품명':'ingredient'}, inplace=True)
+    
+    nutrient_list = ['에너지(kcal)', '수분(g)', '단백질(g)',
+                '지방(g)', '회분(g)', '탄수화물(g)', '당류(g)', '식이섬유(g)', '칼슘(mg)', '철(mg)',
+                '인(mg)', '칼륨(mg)', '나트륨(mg)', '비타민a(μg rae)', '레티놀(μg)', '베타카로틴(μg)',
+                '티아민(mg)', '리보플라빈(mg)', '니아신(mg)', '비타민c(mg)', '비타민d(μg)', '콜레스테롤(mg)',
+                '포화지방산(g)', '트랜스지방산(g)', '폐기율(%)']
+    
+    # 기존의 new_recipe1테이블(레시피명, 식재료명, multi)를 왼쪽, 영양소 테이블 nutri_df의 ingredient를 오른쪽에 두고 merge
+    # for문 안에 merge가 있음. 즉 recipe_title ingredient1 multi1 ingredient 에너지(kcal) 수분(g)...
+    # recipe_title ingredient2 multi2 ingredient 에너지(kcal)... 형식을 반복
+    # 여기서 ingredient 열은 ingredient{i}와 nutri_df의 ingredient을 비교해서 데이터가 있으면 해당 열에 집어 넣는 형식
+    # 예를들면 ingredient13에 참기름이 있는데 nutri_df에 참기름이 있으면 ingredient열에 참기름이 들어가고 
+    # 없다면 NaN이 들어감
+    
+    # for index, row in merged_df.iterrows(): = merged_df를 행 단위로 반복
+    # if pd.notna(row['ingredient']) = ingredient열 데이터가 NaN이 아니면 실행
+    # multiplier = multi{i}에서 100을 나눈값 (영양소 테이블이 100g 기준이기 때문)
+    # 위에 만든 nutrient_list로 for문 실행
+    # new_recipe1.at[index, f'{nutrient}{i}'] = row[nutrient] * multiplier
+    # = merge된 테이블에서 영양소 부분을 가져와 multiplier값을 곱하고 nutrient{i}에 저장
+    # 예를들면 ingredient13이 고추장이고 영양소에서 고추장 에너지(kcal)가 100이면 100*multiplier한 값을
+    # 에너지(kcal)13 에 저장하는 방식    
+    
+    for i in range(1, 14):  # ingredient1부터 ingredient13까지 처리
+        ingredient_col = f'ingredient{i}'
+        multi_col = f'multi{i}'
+        
+        # 필요한 컬럼만 추출하여 병합
+        merged_df = pd.merge(new_recipe1[['recipe_title', ingredient_col, multi_col]],
+                            nutri_df,
+                            left_on=ingredient_col,
+                            right_on='ingredient',
+                            how='left')
+        
+        # 각 값에 대해 계산
+        for index, row in merged_df.iterrows():
+            if pd.notna(row['ingredient']): 
+                multiplier = row[multi_col] / 100 # row[index]로 변경가능
+                for nutrient in nutrient_list:
+                    new_recipe1.at[index, f'{nutrient}{i}'] = row[nutrient] * multiplier
+            else:
+                for nutrient in nutrient_list:
+                    new_recipe1.at[index, f'{nutrient}{i}'] = None  # 또는 0 또는 다른 값으로 설정할 수 있음
+
+    # NaN값 제거
+    new_recipe1 = new_recipe1.dropna(subset=['recipe_title'])
+    
+    # ingredient, multi 컬럼 전부 삭제
+    for i in range(1,14):
+        new_recipe1 = new_recipe1.drop(f'ingredient{i}',axis = 1)
+        new_recipe1 = new_recipe1.drop(f'multi{i}',axis = 1)
+        
+    # 총합 영양소 컬럼 생성
+    total_columns = ['총합_에너지(kcal)', '총합_수분(g)', '총합_단백질(g)', '총합_지방(g)', '총합_회분(g)', '총합_탄수화물(g)',
+                    '총합_당류(g)', '총합_식이섬유(g)', '총합_칼슘(mg)', '총합_철(mg)', '총합_인(mg)', '총합_칼륨(mg)',
+                    '총합_나트륨(mg)', '총합_비타민a(μg rae)', '총합_레티놀(μg)', '총합_베타카로틴(μg)', '총합_티아민(mg)',
+                    '총합_리보플라빈(mg)', '총합_니아신(mg)', '총합_비타민c(mg)', '총합_비타민d(μg)', '총합_콜레스테롤(mg)',
+                    '총합_포화지방산(g)', '총합_트랜스지방산(g)', '총합_폐기율(%)']
+
+    new_recipe1[total_columns] = 0
+    
+    # 각 컬럼당 sum값을 방금 만든 총합 ~ 컬럼에 각각 적용
+    nutrient_columns = ['에너지(kcal)', '수분(g)', '단백질(g)', '지방(g)', '회분(g)', '탄수화물(g)', '당류(g)',
+                        '식이섬유(g)', '칼슘(mg)', '철(mg)', '인(mg)', '칼륨(mg)', '나트륨(mg)', '비타민a(μg rae)',
+                        '레티놀(μg)', '베타카로틴(μg)', '티아민(mg)', '리보플라빈(mg)', '니아신(mg)', '비타민c(mg)',
+                        '비타민d(μg)', '콜레스테롤(mg)', '포화지방산(g)', '트랜스지방산(g)', '폐기율(%)']
+
+    for nutrient in nutrient_columns:
+        new_recipe1[f'총합_{nutrient}'] = new_recipe1[[f'{nutrient}{i}' for i in range(1, 14)]].sum(axis=1)
+    
+    # 남길 컬럼만 선택
+    columns_to_keep = ['recipe_title'] + [f'총합_{nutrient}' for nutrient in nutrient_columns]    
+    new_recipe1 = new_recipe1.loc[:, columns_to_keep]
+    
+    # 소수점 3자리까지만 표시
+    new_recipe1 = round(new_recipe1, 3)
+    
+    return new_recipe1
