@@ -65,47 +65,49 @@ def recipe_preprocessing(raw):
     data = data[data.apply(not_empty_ingredients, axis=1)]
     result = data[['recipe_title', 'recipe_ingredients']].copy()
 
-    title_idx = result[result['recipe_title'].isnull()].index
-    del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index
-    result.drop(del_idx, inplace=True)
-    result.drop(title_idx, inplace=True)
+    title_idx = result[result['recipe_title'].isnull()].index # title이 null값인 행 인덱스 찾기
+    del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index #소시지~ 로 시작해서 오류 일으키는 행 인덱스 찾기
+    result.drop(del_idx, inplace=True) # 오류 일으키는 행 제거
+    result.drop(title_idx, inplace=True) # title null값인 행 제거
 
     return result
 
 #1. 식재료 단위 별로 쪼개기
 def split_ingredient(data):
-    for i in range(1, 21):
-        data.loc[:, f'ingredient{i}'] = None
-        data.loc[:, f'quantity{i}'] = None
-        data.loc[:, f'unit{i}'] = None
-   
+    num_ingredients = 74
+
+    for i in range(1, num_ingredients + 1):
+        data[f'ingredient{i}'] = None
+        data[f'quantity{i}'] = None
+        data[f'unit{i}'] = None
+
     non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
 
     for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
         if row['recipe_ingredients']:
             ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
             ingredient_count = 1
-            for category, items in ingredients_dict.items(): #category : 재료, 양념재료, items: 사과1개, 돼지고기600g
-                if items:  # 아이템이 존재하는 경우
-                    for item in items:
-                        match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item) # 정규식
-                        if match:
-                            ingredient, _, quantity, unit = match.groups()
-                            
-                            data.loc[idx, f'ingredient{ingredient_count}'] = ingredient
-                            data.loc[idx, f'quantity{ingredient_count}'] = quantity
-                            data.loc[idx, f'unit{ingredient_count}'] = unit
 
-                            ingredient_count += 1
-                        else:
-                            # 패턴과 일치하지 않는 경우 딕셔너리에 추가
-                            non_matching_items[idx] = item
-        else:
-            pass
+            for items in ingredients_dict.values():
+                for item in items:
+                    match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item)
+
+                    if match:
+                        ingredient, _, quantity, unit = match.groups()
+
+                        data.at[idx, f'ingredient{ingredient_count}'] = ingredient
+                        data.at[idx, f'quantity{ingredient_count}'] = quantity
+                        data.at[idx, f'unit{ingredient_count}'] = unit
+
+                        ingredient_count += 1
+                    else:
+                        non_matching_items[idx] = item
+
+    data = data.drop([k for k, v in non_matching_items.items() if v != ''])
+    data = data.copy()
+    data.drop(['ingredient75', 'quantity75', 'unit75', 'ingredient76', 'quantity76', 'unit76', 'ingredient77', 'quantity77', 'unit77', 'ingredient78', 'quantity78', 'unit78', 'ingredient79', 'quantity79', 'unit79'], axis = 1, inplace = True)
 
     return data
-
-    #재료가 ingredient1부터 안 들어가서 null값인 거 날려버리기!
 
 # 4. Matrix 변환
 def recipe_food_matrix(data):
@@ -169,8 +171,47 @@ def recipe_nutri(new_recipe1, nutri_df):
         unit_conversion = {line.split()[0]: line.split()[1] for line in file if line.split()[1].isdigit()}
 
 
+#-------------------- 여기서 부터 --------------------#
+# # txt 파일 경로
+# file_path = r"C:\Users\admin\OneDrive\바탕 화면\change2.txt"
+
+# # 빈 리스트 초기화
+# data = []
+
+# # 텍스트 파일 읽기
+# with open(file_path, 'r', encoding='utf-8') as file:
+#     lines = file.readlines()
+
+# # 각 줄에 대해 처리
+# for line in lines:
+#     # 공백을 기준으로 열과 값 분리
+#     parts = line.split()    
+#     # 딕셔너리로 저장
+#     row_data = {'ingredients': parts[0], 'unit': parts[1], 'value': parts[2]}    
+#     # 리스트에 추가
+#     data.append(row_data)
+
+# df11  = pd.DataFrame(data)
+# # dict으로 저장해서 속도 향상
+# df11_dict = df11.set_index(['ingredients', 'unit']).to_dict()['value']
+
+# for index, row in new_recipe1.iterrows():
+#     for i in range(1, 25):
+#         ingredient_col = f"ingredient{i}"
+#         quantity_col = f"quantity{i}"
+#         unit_col = f"unit{i}"
+
+#         ingredient_value = row[ingredient_col] # ingredient{i} 행 데이터
+#         unit_value = row[unit_col] # unit_col{i} 행 데이터
+
+#         # df11_dict에서 일치하는 값을 찾아서 new_recipe1에 채우기
+#         if (ingredient_value, unit_value) in df11_dict:
+#             new_recipe1.at[index, unit_col] = df11_dict[(ingredient_value, unit_value)]
+    #-------------------- 이부분까지 --------------------#
+
 
 def recipe_nutri(new_recipe1, nutri_df):
+    #-------------------- 여기서 부터 --------------------#
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
     file_path = r"C:\Users\HwijunKwon\github\recipe\models\data\change.txt"
     unit_conversion = {}
@@ -196,6 +237,8 @@ def recipe_nutri(new_recipe1, nutri_df):
         column_name = f'unit{i}'
         if column_name in new_recipe1.columns:
             new_recipe1[column_name] = new_recipe1[column_name].apply(lambda x: df_dict.get(x) if pd.notna(x) and not re.match(r'\d+[^\d]*$', str(x)) else x)
+    
+    #-------------------- 이부분까지 --------------------#
     
     # new_recipe1에 recipe_title, ingredient{i}, quantity{i}, unit{i}만 저장
     new_recipe1 = new_recipe1[['recipe_title'] + [f'{name}{i}' for i in range(1, 14) for name in ['ingredient', 'quantity', 'unit']]]
