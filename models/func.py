@@ -483,6 +483,16 @@ def recipe_cos(df, result, index): # df = 테이블, result = 특정 차원으�
 # -식재료 종류 세느 ㄴ함수 
 
 # 한번에 매트릭스까지 처리하는 함수
+def load_split(n = 1000):
+    raw = load_recipe(n)
+    print("load completed")
+    raw_processed = recipe_preprocessing(raw)
+    print("Preprocessing completed")
+    recipe = split_ingredient(raw_processed)
+    print("Ingredient split completed")
+    return recipe
+
+
 def load_matrix(n = 1000):
     raw = load_recipe(n)
     print("load completed")
