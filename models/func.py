@@ -64,7 +64,7 @@ def recipe_preprocessing(raw):
         return row['recipe_ingredients'].strip() != '{}' 
 
     data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
-    result = data[data.apply(not_empty_ingredients, axis=1)]
+    data = data[data.apply(not_empty_ingredients, axis=1)]
     result = data[['recipe_title', 'recipe_ingredients']].copy()
 
     title_idx = result[result['recipe_title'].isnull()].index # title이 null값인 행 인덱스 찾기
@@ -110,6 +110,7 @@ def split_ingredient(data):
 
     #i가 75 이상인 경우 제거하는 조건문
     data = data.copy()
+
     columns_to_drop = []
     for i in range(data.shape[1]):
         if i >= 75:
