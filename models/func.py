@@ -9,6 +9,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse.linalg import svds
 from scipy.linalg import svd
+import datetime
 
 #0. 데이터 불러오기
 def load_recipe(n =1000):
@@ -57,12 +58,13 @@ def recipe_preprocessing(raw):
         if ingredients is not None:
             ingredients = ingredients.replace('\\ufeff', '').replace('\\u200b', '')
         return ingredients
-
+    
+    # recipe_ingredinents가 비어있지 않은 행만 남기기
     def not_empty_ingredients(row):
-        return row['recipe_ingredients'].strip() != '{}' # 결측치 제거
+        return row['recipe_ingredients'].strip() != '{}' 
 
     data["recipe_ingredients"] = data["recipe_ingredients"].apply(clean_ingredients)
-    data = data[data.apply(not_empty_ingredients, axis=1)]
+    result = data[data.apply(not_empty_ingredients, axis=1)]
     result = data[['recipe_title', 'recipe_ingredients']].copy()
 
     title_idx = result[result['recipe_title'].isnull()].index # title이 null값인 행 인덱스 찾기
@@ -503,7 +505,7 @@ def load_split(n = 1000):
     print("Ingredient split completed")
     return recipe
 
-
+# 한번에 레시피X식재료 매트릭스를 출력하는 함수
 def load_matrix(n = 1000):
     raw = load_recipe(n)
     print("load completed")
@@ -513,8 +515,13 @@ def load_matrix(n = 1000):
     print("Ingredient split completed")
     result = recipe_food_matrix(recipe)
     print("Matrix creation completed")
-    return result 
 
+    now = datetime.datetime.now()
+    format = "%b %d %H:%M"
+    filename = now.strftime(format)
+    result.to_csv("matrix/" + filename + ".csv")
+    print("recipe X food matrix is saved with the name" + "matrix/"+filename)
+    return result 
 
 def not_matching(n=100):
     raw = load_recipe(n)
@@ -543,7 +550,6 @@ def not_matching(n=100):
         else:
             pass
     return non_matching_items
-
 
 def recipe_nutri_tiny(new_recipe1, nutri_df):
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
