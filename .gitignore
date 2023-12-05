@@ -12,4 +12,8 @@ models/recipe_step_009.ipynb
 models/009_not_upload.ipynb
 models/OCR_009.ipynb
 models/test_svd.ipynb
+models/test_steps.ipynb
+models/recipe.csv
+models/recipe_ingredient.csv
+models/recipe_pre.csv
 models/func_009.ipynb
