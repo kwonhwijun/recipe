@@ -125,35 +125,38 @@ def split_ingredient(data):
 # 4. Matrix 변환
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
+
+    # 분수를 숫자로 convert_fracion_to_float(1/2) = 0.5)
     def convert_fraction_to_float(quantity):
         from fractions import Fraction
-
         try:
             return float(Fraction(quantity))
         except ValueError:
             return None 
+        
+    # 단위를 g으로 : convert_unit_to_number('조금') = 10
     def convert_unit_to_number(unit):
-        '''
-        단위에 따른 g 수 변환
-        '''
         unit_conversion = {
             'g': 1,
             '개': 100,
             '조금' :10
         }
         return unit_conversion.get(unit, 1)
+    # all_ingredients: 모든 식재료 리스트
     ingredient_columns = data.filter(like='ingredient').drop(columns=['recipe_ingredients'])
     all_ingredients = set()
-    for i in range(1, 21):  
+    for i in range(1, 75):  
         all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
+    # recipe_ingredients_df: 비어있는 레시피 X 식재료 df
     col_name = ['recipe_title'].append(list(all_ingredients))
     recipe_ingredients_df = pd.DataFrame(columns=col_name)
 
+    # 레시피 하나씩 붙이기 
     recipe_rows = []
-    for idx, row in tqdm(data.iterrows(), total = data.shape[0]) :
+    for idx, row in tqdm(data.iterrows(), total = data.shape[0]) : # tqdm으로 진행상황 확인
         recipe_data = {ingredient: 0.0 for ingredient in all_ingredients}  # 모든 식재료를 None으로 초기화
-        for i in range(1, 21):  
+        for i in range(1, 50):  
             ingredient = row[f'ingredient{i}']
             quantity = row[f'quantity{i}']
             unit = row[f'unit{i}']
@@ -693,3 +696,89 @@ def recipe_nutri_tiny(new_recipe1, nutri_df):
     new_recipe1 = round(new_recipe1, 3)
     
     return new_recipe1
+
+# Tiny Function
+def load_recipe_tiny(n=100):
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12") # DB 연결
+    conn = od.connect(user=config.DB_CONFIG['user'], password=config.DB_CONFIG['password'], dsn=config.DB_CONFIG['dsn'])
+    exe = conn.cursor()
+    exe.execute(f'SELECT * FROM (SELECT * FROM recipe_table ORDER BY row_cnt ASC) WHERE row_cnt <= {n}')
+    result = pd.DataFrame(exe.fetchall(), columns=[col[0].lower() for col in exe.description])  # row와 column 이름을 가져와 DataFrame 생성
+    conn.close() #실험 # 수정
+    return result
+
+
+def recipe_preprocessing_tiny(raw):
+    result = (
+        raw.dropna(subset=['recipe_ingredients', 'recipe_title']) # NA 제거
+        .assign(recipe_ingredients=lambda x: x['recipe_ingredients'].str.replace(r'\\ufeff|\\u200b', '', regex=True))
+        .loc[lambda x: x['recipe_ingredients'].str.strip() != '{}'] # 빈 값(띄여쓰기) 제거
+        .loc[lambda x: ~x['recipe_ingredients'].str.startswith('소시지')] # 소시지에서 문제 발생
+        .loc[:, ['recipe_title', 'recipe_ingredients']]
+        .drop_duplicates()
+    )
+    return result
+
+def split_ingredient_tiny(data):
+    num_ingredients = 74
+
+    # 식재료 이름, 양, 단위 칼럼 생성
+    # 모든 재료에 대한 열을 한 번에 생성
+    ingredient_columns = [f'ingredient{i}' for i in range(1, num_ingredients + 1)]
+    quantity_columns = [f'quantity{i}' for i in range(1, num_ingredients + 1)]
+    unit_columns = [f'unit{i}' for i in range(1, num_ingredients + 1)]
+
+    # 새로운 DataFrame을 생성하여 모든 열을 한 번에 추가합니다.
+    new_columns = ingredient_columns + quantity_columns + unit_columns
+    data = pd.concat([data, pd.DataFrame(columns=new_columns)], axis=1)
+
+
+    non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
+
+    for idx, row in tqdm(data.iterrows(), total=data.shape[0]): #tqdm으로 진행상황 확인
+        if row['recipe_ingredients']:
+            ingredients_dict = ast.literal_eval(row["recipe_ingredients"]) #딕셔너리 형태로 저장된 recipe_ingredients 불러오기
+            ingredient_count = 1
+            
+            for items in ingredients_dict.values():
+                if ingredient_count <= 75 : # 개별 레시피의 식재료 75개까지만
+                    for item in items:
+                        match = re.match(r'([가-힣a-zA-Z]+(\([가-힣a-zA-Z]+\))?|\d+[가-힣a-zA-Z]*|\([가-힣a-zA-Z]+\)[가-힣a-zA-Z]+)([\d.+/~-]*)([가-힣a-zA-Z]+|약간|조금)?', item)
+                        if match:
+                            ingredient, _, quantity, unit = match.groups()
+
+                            data.at[idx, f'ingredient{ingredient_count}'] = ingredient
+                            data.at[idx, f'quantity{ingredient_count}'] = quantity
+                            data.at[idx, f'unit{ingredient_count}'] = unit
+
+                            ingredient_count += 1
+                        else:
+                            non_matching_items[idx] = item
+                else : pass
+
+    data = data.drop([k for k, v in non_matching_items.items() if v != ''])
+
+    return data
+
+
+def load_matrix_tiny(n = 1000):
+    raw = load_recipe(n)
+    print("load completed")
+    raw_processed = recipe_preprocessing_tiny(raw)
+    print("Preprocessing completed")
+    recipe = split_ingredient_tiny(raw_processed)
+    print("Ingredient split completed")
+    result = recipe_food_matrix(recipe)
+    print("Matrix creation completed")
+
+    now = datetime.datetime.now()
+    format = "%b %d %H:%M"
+    filename = now.strftime(format)
+    result.to_csv("matrix/" + filename + ".csv")
+    print("recipe X food matrix is saved with the name" + "matrix/"+filename)
+    return result 
+
+
+def recipe_step(n=100):
+    data = load_recipe_tiny(n)
+    
