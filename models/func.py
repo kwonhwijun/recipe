@@ -69,6 +69,7 @@ def recipe_preprocessing(raw):
     del_idx = result[result['recipe_ingredients'].str.startswith('소시지')].index #소시지~ 로 시작해서 오류 일으키는 행 인덱스 찾기
     result.drop(del_idx, inplace=True) # 오류 일으키는 행 제거
     result.drop(title_idx, inplace=True) # title null값인 행 제거
+    result = result.drop_duplicates() # 중복 제거
 
     return result
 
@@ -104,8 +105,18 @@ def split_ingredient(data):
                         non_matching_items[idx] = item
 
     data = data.drop([k for k, v in non_matching_items.items() if v != ''])
+
+    #i가 75 이상인 경우 제거하는 조건문
     data = data.copy()
-    data.drop(['ingredient75', 'quantity75', 'unit75', 'ingredient76', 'quantity76', 'unit76', 'ingredient77', 'quantity77', 'unit77', 'ingredient78', 'quantity78', 'unit78', 'ingredient79', 'quantity79', 'unit79'], axis = 1, inplace = True)
+    columns_to_drop = []
+    for i in range(data.shape[1]):
+        if i >= 75:
+            column_prefixes = [f'ingredient{i}', f'quantity{i}', f'unit{i}']
+            columns_to_drop.extend(column_prefixes)
+
+    # 실제로 데이터프레임에 존재하는 열만 삭제
+    existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
+    data.drop(existing_columns_to_drop, axis=1, inplace=True)
 
     return data
 
