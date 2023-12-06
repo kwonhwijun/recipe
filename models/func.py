@@ -123,6 +123,38 @@ def split_ingredient(data):
 
     return data
 
+# 2. 식재료 종류 전처리 (돌리면 코랩 기준 약 9분 30초 정도 걸림)
+def process_ingredient(dataframe):
+    dataframe = dataframe.copy()
+    def process_pattern(dataframe, pattern, replacement):
+        for i in range(1, 75):
+            col_name = f'ingredient{i}'
+            unit_col_name = f'unit{i}'
+
+            dataframe[unit_col_name] = np.where(dataframe[col_name].notna() & dataframe[col_name].str.contains(pattern, regex=True), replacement, dataframe[unit_col_name])
+
+            dataframe[col_name] = dataframe[col_name].str.replace(pattern, '', regex=True)
+
+        dataframe = dataframe.drop_duplicates()
+
+        return dataframe
+
+    # '약간', '적당량', '조금', '톡톡', '적당히' 패턴 처리
+    dataframe = process_pattern(dataframe, r'약간', '약간')
+    dataframe = process_pattern(dataframe, r'적당량', '적당량')
+    dataframe = process_pattern(dataframe, r'적당히', '적당량')
+    dataframe = process_pattern(dataframe, r'적당양', '적당량')
+    dataframe = process_pattern(dataframe, r'조금.*', '조금')
+    dataframe = process_pattern(dataframe, r'톡톡(톡)?', '톡톡')
+
+    # 괄호 제거
+    for i in range(1, 75):
+        col_name = f'ingredient{i}'
+        dataframe[col_name] = dataframe[col_name].str.replace(r'\([^)]*\)', '', regex=True)
+        dataframe = dataframe.drop_duplicates() # 중복 제거
+
+    return dataframe
+
 # 4. Matrix 변환
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
