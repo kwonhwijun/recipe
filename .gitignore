@@ -17,3 +17,4 @@ models/recipe.csv
 models/recipe_ingredient.csv
 models/recipe_pre.csv
 models/now_009.ipynb
+core/
