@@ -16,4 +16,5 @@ models/test_steps.ipynb
 models/recipe.csv
 models/recipe_ingredient.csv
 models/recipe_pre.csv
-models/func_009.ipynb
+models/now_009.ipynb
+core/
