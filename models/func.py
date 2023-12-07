@@ -176,7 +176,11 @@ def recipe_food_matrix(data):
         }
         return unit_conversion.get(unit, 1)
     # all_ingredients: 모든 식재료 리스트
-    ingredient_columns = data.filter(like='ingredient').drop(columns=['recipe_ingredients'])
+
+    ingredient_columns = data.filter(like='ingredient')
+    if 'recipe_ingredients' in ingredient_columns.columns:
+        data = data.drop(columns=['recipe_ingredients'])
+
     all_ingredients = set()
     for i in range(1, 75):  
         all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
