@@ -1,3 +1,26 @@
+from sklearn.decomposition import TruncatedSVD
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.sparse.linalg import svds
+from scipy.linalg import svd
+import numpy as np 
+import pandas as pd
+
+
+
+import recipe
+def two_matrix(n):
+    raw = recipe.load_recipe(n)
+    data = recipe.recipe_preprocessing(raw)
+    data2 = recipe.split_ingredient(data)
+    ingred_matrix = recipe.recipe_food_matrix(data2)
+    print("ingred matrix completed")
+
+    nutri = recipe.select_table('select * from nutrient_table')
+    nutri_matrix = recipe.recipe_nutri(data2, nutri)
+    print("nutrition matrix completed")
+    return ingred_matrix, nutri_matrix
+
+
 def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할 테이블, n = 차원수
     if method == 'sklearn':
         if 'recipe_title' in df.columns:
