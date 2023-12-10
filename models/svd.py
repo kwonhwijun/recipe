@@ -18,7 +18,7 @@ def two_matrix(n = 100, by = 'oracle'):
     now = datetime.now().strftime("%m%d-%H%M")
 
     ingred_matrix = recipe.recipe_food_matrix(data2)
-    nutri = recipe.select_table('select * from nutrient_table')
+    nutri = recipe.select_table('select * from nutrient_data_table')
     nutri_matrix = recipe.recipe_nutri(data2, nutri)
 
     def not_only_one(df):
