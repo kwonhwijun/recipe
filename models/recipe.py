@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse.linalg import svds
 from scipy.linalg import svd
 import datetime
+import warnings
 
 #0. 데이터 불러오기
 def load_recipe(n =1000):
@@ -265,6 +266,7 @@ def recipe_nutri(new_recipe1, nutri_df):
 
 
 def recipe_nutri(new_recipe1, nutri_df):
+    warnings.filterwarnings('ignore', category= UserWarning)
     #-------------------- 여기서 부터 --------------------#
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
     file_path = r"C:\Users\HwijunKwon\github\recipe\models\data\change.txt"

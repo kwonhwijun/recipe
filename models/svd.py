@@ -4,24 +4,35 @@ from scipy.sparse.linalg import svds
 from scipy.linalg import svd
 import numpy as np 
 import pandas as pd
-
-
+from datetime import datetime
 
 import recipe
-def two_matrix(n, by = 'oracle'):
-    if 'by' == 'oracle': 
+def two_matrix(n = 100, by = 'oracle'):
+    if by == 'oracle': 
         raw = recipe.load_recipe(n)
         data = recipe.recipe_preprocessing(raw)
         data2 = recipe.split_ingredient(data)
+    now = datetime.now().strftime("%m%d-%H%M")
 
-    if 'by' == 'csv' :
-        
     ingred_matrix = recipe.recipe_food_matrix(data2)
-    print("ingred matrix completed")
-
     nutri = recipe.select_table('select * from nutrient_table')
     nutri_matrix = recipe.recipe_nutri(data2, nutri)
-    print("nutrition matrix completed")
+
+    def not_only_one(df):
+        column_value_counts  = df.nunique(axis=0)
+        column_names = column_value_counts[column_value_counts >= 2].index #2번 이상 등장한 식재료만 사용
+        df_not_only_one_col = df[column_names].copy()
+        print("칼럼 수 변화: " + f"{df.shape[1]} -> {df_not_only_one_col.shape[1]}")
+
+        df_not_only_one_row = df_not_only_one_col[df_not_only_one_col.nunique(axis =1) >= 2].copy()
+        print("행의 수 변화: " + f"{df_not_only_one_col.shape[0]} -> {df_not_only_one_row.shape[0]}") # 식재료가 2개 이상 등장
+        return  df_not_only_one_row
+
+    ingred_matrix, nutri_matrix = not_only_one(ingred_matrix), not_only_one(nutri_matrix)    
+    ingred_matrix.to_csv(f'matrix/ingred_matrix_{n}_{now}')
+    print("ingred matrix saved")
+    nutri_matrix.to_csv(f'matrix/nutri_matrix_{n}_{now}')
+    print("nutrition matrix saved")
     return ingred_matrix, nutri_matrix
 
 
