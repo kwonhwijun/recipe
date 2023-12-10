@@ -80,9 +80,11 @@ def recipe_preprocessing(raw):
 def split_ingredient(data):
     num_ingredients = 74
 
-    column_names = [f'ingredient{i}' for i in range(1, num_ingredients + 1)] + \
-               [f'quantity{i}' for i in range(1, num_ingredients + 1)] + \
-               [f'unit{i}' for i in range(1, num_ingredients + 1)]
+    list = [[f'ingredient{i}', f'quantity{i}', f'unit{i}'] for i in range(1, num_ingredients + 1)]
+    column_names = []
+    for i in list :
+        column_names.extend(i)
+
     empty_columns = pd.DataFrame(columns=column_names)
     data = pd.concat([data, empty_columns], axis=1)
 
@@ -122,6 +124,8 @@ def split_ingredient(data):
     # 실제로 데이터프레임에 존재하는 열만 삭제
     existing_columns_to_drop = [col for col in columns_to_drop if col in data.columns]
     data.drop(existing_columns_to_drop, axis=1, inplace=True)
+
+    
 
     return data
 
@@ -318,13 +322,11 @@ def recipe_nutri(new_recipe1, nutri_df):
         except ValueError:
             new_recipe1.loc[:, f'quantity{i}'] = 0
     
-
-
     #mulit{i} 컬럼 생성 후 quantity * unit 값 대입
     for i in range(1,14):
-        new_recipe1[f'multi{i}'] = None
+        new_recipe1.loc[:, f'multi{i}'] = None
     for i in range(1, 14):
-        new_recipe1[f'multi{i}'] = new_recipe1[f'quantity{i}'] * new_recipe1[f'unit{i}']
+        new_recipe1.loc[:, f'multi{i}'] = new_recipe1.loc[:, f'quantity{i}'] * new_recipe1.loc[:, f'unit{i}']
 
         
     # quantity, unit 컬럼 전부 삭제
