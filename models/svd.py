@@ -5,8 +5,11 @@ from scipy.linalg import svd
 import numpy as np 
 import pandas as pd
 from datetime import datetime
-
+from scipy import linalg
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 import recipe
+
 def two_matrix(n = 100, by = 'oracle'):
     if by == 'oracle': 
         raw = recipe.load_recipe(n)
@@ -34,6 +37,39 @@ def two_matrix(n = 100, by = 'oracle'):
     nutri_matrix.to_csv(f'matrix/nutri_matrix_{n}_{now}.csv')
     print("nutrition matrix saved")
     return ingred_matrix, nutri_matrix
+
+
+def matrix_decomposition(df, n = 100):
+    title = df.recipe_title
+    df = df.drop(columns ='recipe_title').copy()
+    U, S, V = linalg.svd(df.values)
+    recipe_vec = U[:, :n]@np.diag(S[:n])
+    ingredient_vec = V[:, :n]@np.diag(S[:n])
+    print(f"{df.shape[0]}개의 레시피, {df.shape[1]}개의 식재료 -> {n}차원으로 재표현 완료")
+    return title, recipe_vec, ingredient_vec
+
+
+
+def svd_tsne(matrix, n =2):
+    if 'recipe_title' in matrix.columns:
+        title = matrix['recipe_title']
+        matrix.drop(columns = 'recipe_title', inplace = True)
+    else : pass
+
+    def matrix_decomposition(df, n = 100):
+        U, S, V = linalg.svd(df.values)
+        recipe_vec = U[:, :n]@np.diag(S[:n])
+        ingredient_vec = V[:, :n]@np.diag(S[:n])
+        print(f"{df.shape[0]}개의 레시피, {df.shape[1]}개의 식재료 -> {n}차원으로 재표현 완료")
+        return recipe_vec, ingredient_vec
+    
+    recipe_vec, ingred_vec = matrix_decomposition(matrix)
+
+    tsne = TSNE(n_components= n)
+    reduced_vec = tsne.fit_transform(recipe_vec)
+    plt.scatter(reduced_vec[:, 0], reduced_vec[:, 1])
+    plt.show()
+
 
 
 def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할 테이블, n = 차원수

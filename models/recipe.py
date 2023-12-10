@@ -220,7 +220,7 @@ def recipe_food_matrix(data):
 # 재료 쪼갠 후 레시피별 영양소 나오는 테이블
 
 def recipe_nutri(new_recipe1, nutri_df):
-    file_path = r"models/data/change.txt"
+    file_path = r"data\change.txt"
     unit_conversion = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         unit_conversion = {line.split()[0]: line.split()[1] for line in file if line.split()[1].isdigit()}
@@ -269,7 +269,7 @@ def recipe_nutri(new_recipe1, nutri_df):
     warnings.filterwarnings('ignore', category= UserWarning)
     #-------------------- 여기서 부터 --------------------#
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
-    file_path = r"C:\Users\HwijunKwon\github\recipe\models\data\change.txt"
+    file_path = r"data\change.txt"
     unit_conversion = {}
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -299,19 +299,24 @@ def recipe_nutri(new_recipe1, nutri_df):
     # new_recipe1에 recipe_title, ingredient{i}, quantity{i}, unit{i}만 저장
     new_recipe1 = new_recipe1[['recipe_title'] + [f'{name}{i}' for i in range(1, 14) for name in ['ingredient', 'quantity', 'unit']]]
  
-    # 계산을 위해 quantity의 타입변경 str => float
+    #계산을 위해 quantity의 타입변경 str => float
     for i in range(1, 14):
         try:
-            new_recipe1[f'quantity{i}'] = pd.to_numeric(new_recipe1[f'quantity{i}'], errors='coerce').astype('float16')
+            new_recipe1.loc[:, f'quantity{i}'] = pd.to_numeric(new_recipe1[f'quantity{i}'], errors='coerce').astype('float16')
         except ValueError:
-            new_recipe1[f'quantity{i}'] = 0
+            new_recipe1.loc[:, f'quantity{i}'] = 0
     
-    # mulit{i} 컬럼 생성 후 quantity * unit 값 대입
+
+
+    #mulit{i} 컬럼 생성 후 quantity * unit 값 대입
     for i in range(1,14):
-        new_recipe1[f'multi{i}'] = None
+        new_recipe1.loc[:, f'multi{i}'] = None
         
     for i in range(1, 14):
-        new_recipe1[f'multi{i}'] = new_recipe1[f'quantity{i}'] * new_recipe1[f'unit{i}']
+        quantity =  new_recipe1[f'quantity{i}']
+        unit = new_recipe1[f'unit{i}']
+        multi = quantity * unit
+
         
     # quantity, unit 컬럼 전부 삭제
     for i in range(1,14):
