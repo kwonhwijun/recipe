@@ -17,9 +17,9 @@ def two_matrix(n = 100, by = 'oracle'):
         data2 = recipe.split_ingredient(data) #쪼개기
         data3 = recipe.process_ingredient(data2) #식재료 처리
 
-    ingred_matrix = recipe.recipe_food_matrix(data3)
-    nutri = recipe.select_table('select * from nutrient_table')
-    nutri_matrix = recipe.recipe_nutri(data3, nutri)
+    ingred_matrix = recipe.recipe_food_matrix(data2)
+    nutri = recipe.select_table('select * from nutrient_data_table')
+    nutri_matrix = recipe.recipe_nutri(data2, nutri)
 
     def not_only_one(df):
         column_value_counts  = df.nunique(axis=0)
