@@ -157,6 +157,18 @@ def process_ingredient(dataframe):
 
     return dataframe
 
+
+# 식재료 2개 만 있는 레시피는 의미 없다. => EDA 
+# 한번만 반영된 식재료는 제거 한다 (레시피도 같이) 
+#   EX) 콩고전통요리 만들기: 콩고옥수수 : 1 => 제거.
+
+# => 50번이상 등장한 식재료 목록 -> 각 행에 대해서 조회? 
+
+
+
+
+
+
 # 4. Matrix 변환
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
