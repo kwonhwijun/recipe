@@ -381,7 +381,10 @@ def recipe_nutri(new_recipe1, nutri_df):
         # 각 값에 대해 계산
         for index, row in merged_df.iterrows():
             if pd.notna(row['ingredient']): 
-                multiplier = row[multi_col] / 100 # row[index]로 변경가능
+                if row[multi_col] is not None: # None값 처리를 위해
+                    multiplier = row[multi_col] / 100 # row[index]로 변경가능
+                else :
+                    multiplier = 0
                 for nutrient in nutrient_list:
                     new_recipe1.at[index, f'{nutrient}{i}'] = row[nutrient] * multiplier
             else:

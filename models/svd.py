@@ -32,11 +32,15 @@ def two_matrix(n = 100, by = 'oracle'):
         return  df_not_only_one_row
 
     ingred_matrix, nutri_matrix = not_only_one(ingred_matrix), not_only_one(nutri_matrix)    
-    ingred_matrix.to_csv(f'matrix/ingred_matrix_{n}_{now}.csv')
+    ingred_matrix.to_csv(f'matrix/ingred__{n}.csv')
     print("ingred matrix saved")
-    nutri_matrix.to_csv(f'matrix/nutri_matrix_{n}_{now}.csv')
+    nutri_matrix.to_csv(f'matrix/nutri__{n}.csv')
     print("nutrition matrix saved")
     return ingred_matrix, nutri_matrix
+
+def load_matrix(data = 'ingred', n=1000):
+    return pd.read_csv(f'matrix/ingred_{n}.csv')
+
 
 
 def matrix_decomposition(df, n = 100):
@@ -47,7 +51,6 @@ def matrix_decomposition(df, n = 100):
     ingredient_vec = V[:, :n]@np.diag(S[:n])
     print(f"{df.shape[0]}개의 레시피, {df.shape[1]}개의 식재료 -> {n}차원으로 재표현 완료")
     return title, recipe_vec, ingredient_vec
-
 
 
 def svd_tsne(matrix, n =2):
@@ -68,6 +71,11 @@ def svd_tsne(matrix, n =2):
     tsne = TSNE(n_components= n)
     reduced_vec = tsne.fit_transform(recipe_vec)
     plt.scatter(reduced_vec[:, 0], reduced_vec[:, 1])
+
+    idx =  matrix[matrix.대파 != 0.0].index
+    for i in idx :
+        plt.annotate(title[i], reduced_vec[i], size = 10)
+        plt.scatter(reduced_vec[i, 0], reduced_vec[i, 1], c= 'red')
     plt.show()
 
 
