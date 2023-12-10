@@ -8,10 +8,14 @@ import pandas as pd
 
 
 import recipe
-def two_matrix(n):
-    raw = recipe.load_recipe(n)
-    data = recipe.recipe_preprocessing(raw)
-    data2 = recipe.split_ingredient(data)
+def two_matrix(n, by = 'oracle'):
+    if 'by' == 'oracle': 
+        raw = recipe.load_recipe(n)
+        data = recipe.recipe_preprocessing(raw)
+        data2 = recipe.split_ingredient(data)
+
+    if 'by' == 'csv' :
+        
     ingred_matrix = recipe.recipe_food_matrix(data2)
     print("ingred matrix completed")
 

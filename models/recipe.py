@@ -79,10 +79,11 @@ def recipe_preprocessing(raw):
 def split_ingredient(data):
     num_ingredients = 74
 
-    for i in range(1, num_ingredients + 1):
-        data[f'ingredient{i}'] = None
-        data[f'quantity{i}'] = None
-        data[f'unit{i}'] = None
+    column_names = [f'ingredient{i}' for i in range(1, num_ingredients + 1)] + \
+               [f'quantity{i}' for i in range(1, num_ingredients + 1)] + \
+               [f'unit{i}' for i in range(1, num_ingredients + 1)]
+    empty_columns = pd.DataFrame(columns=column_names)
+    data = pd.concat([data, empty_columns], axis=1)
 
     non_matching_items = {} # 패턴과 일치하지 않는 데이터를 저장할 딕셔너리
 
