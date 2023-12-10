@@ -29,9 +29,9 @@ def two_matrix(n = 100, by = 'oracle'):
         return  df_not_only_one_row
 
     ingred_matrix, nutri_matrix = not_only_one(ingred_matrix), not_only_one(nutri_matrix)    
-    ingred_matrix.to_csv(f'matrix/ingred_matrix_{n}_{now}')
+    ingred_matrix.to_csv(f'matrix/ingred_matrix_{n}_{now}.csv')
     print("ingred matrix saved")
-    nutri_matrix.to_csv(f'matrix/nutri_matrix_{n}_{now}')
+    nutri_matrix.to_csv(f'matrix/nutri_matrix_{n}_{now}.csv')
     print("nutrition matrix saved")
     return ingred_matrix, nutri_matrix
 
