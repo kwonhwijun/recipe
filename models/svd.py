@@ -12,12 +12,12 @@ import recipe
 
 def two_matrix(n = 100, by = 'oracle'):
     if by == 'oracle': 
-        raw = recipe.load_recipe(n) # 레시피 
-        data = recipe.recipe_preprocessing(raw) #전처리
-        data2 = recipe.split_ingredient(data) #쪼개기
-        data3 = recipe.process_ingredient(data2) #식재료 처리
+        data = recipe.load_recipe(n) # 레시피 
+        data2 = recipe.recipe_preprocessing(data) #전처리
+        data3 = recipe.split_ingredient(data2) #쪼개기
+        data4 = recipe.process_ingredient(data3) # 처리    
 
-    ingred_matrix = recipe.recipe_food_matrix(data2)
+    ingred_matrix = recipe.recipe_food_matrix(data4)
     nutri = recipe.select_table('select * from nutrient_data_table')
     nutri_matrix = recipe.recipe_nutri(data2, nutri)
 
@@ -43,9 +43,12 @@ def load_matrix(data = 'ingred', n=1000):
 
 
 
-def matrix_decomposition(df, n = 100):
-    title = df.recipe_title
-    df = df.drop(columns ='recipe_title').copy()
+def matrix_decomposition(matrix, n = 100):
+    title = matrix.recipe_title
+    df = matrix.drop(columns ='recipe_title').copy()
+
+     
+
     U, S, V = linalg.svd(df.values)
     recipe_vec = U[:, :n]@np.diag(S[:n])
     ingredient_vec = V[:, :n]@np.diag(S[:n])
@@ -54,19 +57,8 @@ def matrix_decomposition(df, n = 100):
 
 
 def svd_tsne(matrix, n =2):
-    if 'recipe_title' in matrix.columns:
-        title = matrix['recipe_title']
-        matrix.drop(columns = 'recipe_title', inplace = True)
-    else : pass
 
-    def matrix_decomposition(df, n = 100):
-        U, S, V = linalg.svd(df.values)
-        recipe_vec = U[:, :n]@np.diag(S[:n])
-        ingredient_vec = V[:, :n]@np.diag(S[:n])
-        print(f"{df.shape[0]}개의 레시피, {df.shape[1]}개의 식재료 -> {n}차원으로 재표현 완료")
-        return recipe_vec, ingredient_vec
-    
-    recipe_vec, ingred_vec = matrix_decomposition(matrix)
+    title, recipe_vec, ingred_vec = matrix_decomposition(matrix, n= 100)
 
     tsne = TSNE(n_components= n)
     reduced_vec = tsne.fit_transform(recipe_vec)

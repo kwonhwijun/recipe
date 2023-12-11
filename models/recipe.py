@@ -283,6 +283,9 @@ def recipe_nutri(new_recipe1, nutri_df):
 
 def recipe_nutri(new_recipe1, nutri_df):
     warnings.filterwarnings('ignore', category= UserWarning)
+    warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
+    warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
+
     #-------------------- 여기서 부터 --------------------#
     # txt 파일 경로 (딕셔너리 수정시 수정 필요함)
     file_path = r"data\change.txt"
@@ -400,6 +403,7 @@ def recipe_nutri(new_recipe1, nutri_df):
     # 총합 영양소 컬럼 생성
     nutrient_list1 = ['총합_' + nutrient for nutrient in nutrient_list]
     new_recipe1[nutrient_list1] = 0
+    warnings.filterwarnings('ignore', category=pd.errors.PerformanceWarning)
     
     # 각 컬럼당 sum값을 방금 만든 총합 ~ 컬럼에 각각 적용
     for nutrient in nutrient_list:
@@ -537,7 +541,8 @@ def load_matrix_tiny(n = 1000):
     print("Preprocessing completed")
     recipe = split_ingredient_tiny(raw_processed)
     print("Ingredient split completed")
-    result = recipe_food_matrix(recipe)
+    recipe2 = process_ingredient(recipe)
+    result = recipe_food_matrix(recipe2)
     print("Matrix creation completed")
 
     now = datetime.datetime.now()
