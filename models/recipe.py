@@ -133,7 +133,7 @@ def split_ingredient(data):
 def process_ingredient(dataframe):
     dataframe = dataframe.copy()
     def process_pattern(dataframe, pattern, replacement):
-        for i in range(1, 75):
+        for i in tqdm(range(1, 75)):
             col_name = f'ingredient{i}'
             unit_col_name = f'unit{i}'
 
@@ -154,7 +154,7 @@ def process_ingredient(dataframe):
     dataframe = process_pattern(dataframe, r'톡톡(톡)?', '톡톡')
 
     # 괄호 제거
-    for i in range(1, 75):
+    for i in tqdm(range(1, 75)):
         col_name = f'ingredient{i}'
         dataframe[col_name] = dataframe[col_name].str.replace(r'\([^)]*\)', '', regex=True)
         dataframe = dataframe.drop_duplicates() # 중복 제거
