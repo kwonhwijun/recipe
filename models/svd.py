@@ -44,10 +44,14 @@ def load_matrix(data = 'ingred', n=1000):
 
 
 def matrix_decomposition(matrix, n = 100):
+    def normalize_matrix(input):
+        input = input.loc[:, (input  != 0.0).sum() >1] 
+        d1 = input.iloc[:,:1] # 타이틀
+        d2 = input.iloc[:, 1:].apply(lambda x: x/max(x), axis = 0) # 정규화
+        return pd.concat([d1, d2], axis= 1)
+    matrix = normalize_matrix(matrix)
     title = matrix.recipe_title
     df = matrix.drop(columns ='recipe_title').copy()
-
-     
 
     U, S, V = linalg.svd(df.values)
     recipe_vec = U[:, :n]@np.diag(S[:n])
@@ -70,6 +74,33 @@ def svd_tsne(matrix, n =2):
         plt.scatter(reduced_vec[i, 0], reduced_vec[i, 1], c= 'red')
     plt.show()
 
+
+# n번째 레시피와 가장 가까운 
+def draw_TSNE(title, recipe_vec, n = 0):
+    # recipe_vec 간의 유사도 구하기
+    sim_recipe = cosine_similarity(recipe_vec , recipe_vec)
+    # TSNE로 차원 축소하기
+    tsne = TSNE(n_components= 2)
+    reduced_vec = tsne.fit_transform(recipe_vec)
+    # 전체 점 찍기
+    plt.scatter(reduced_vec[:, 0], reduced_vec[:, 1], c = 'grey')
+    # 대상 레시피 빨간색으로 
+    print(f"{title[n]}와 가장 가까운 레시피 5개 (코사인 유사도)")
+    plt.annotate(title[n], reduced_vec[n], size = 10)
+    plt.scatter(reduced_vec[n, 0], reduced_vec[n, 1], c= 'red')
+    # 가장 가까운 5개 레시피 찾아서 초록색으로 표시
+    def find_5idx(title, similarity, row_num = 0):
+        similarity_pd = pd.DataFrame(similarity, columns=title)
+        sim_list = similarity_pd.loc[row_num].sort_values(ascending= False)[1:6]
+        idx = []
+        for sim_title in list(sim_list.index) :
+            idx.extend(list(title.index[title == sim_title]))
+    output = []
+    for i in find_5idx(title, sim_recipe, n):
+        plt.scatter(reduced_vec[i, 0], reduced_vec[i, 1], c= 'blue')
+        output.append(title[i])
+        print(title[i])
+    return output
 
 
 def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할 테이블, n = 차원수

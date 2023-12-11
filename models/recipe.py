@@ -177,21 +177,23 @@ def process_ingredient(dataframe):
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
 
-    # 분수를 숫자로 convert_fracion_to_float(1/2) = 0.5)
-    def convert_fraction_to_float(quantity):
-        from fractions import Fraction
+    def parse_quantity(quantity):
+        if '~' in quantity:
+            numbers = re.findall(r'\d+\.?\d*', quantity)  # 숫자들을 찾음
+            numbers = [float(num) for num in numbers]  # 문자열을 실수로 변환
+            return float(sum(numbers) / len(numbers))  # 평균 계산
         try:
-            return float(Fraction(quantity))
+            return float(quantity)  # 일반적인 경우, 숫자로 변환
         except ValueError:
-            return None 
+            return float(1) # 비어있는 경우 1로 변환 
+         
         
     # 단위를 g으로 : convert_unit_to_number('조금') = 10
     def convert_unit_to_number(unit):
-        unit_conversion = {
-            'g': 1,
-            '개': 100,
-            '조금' :10
-        }
+        file_path = r"data\change.txt"
+        unit_conversion = {}
+        with open(file_path, 'r', encoding='utf-8') as file:
+            unit_conversion = {line.split()[0]: float(line.split()[1]) for line in file if line.split()[1].isdigit()}
         return unit_conversion.get(unit, 1)
     # all_ingredients: 모든 식재료 리스트
 
@@ -200,23 +202,28 @@ def recipe_food_matrix(data):
         data = data.drop(columns=['recipe_ingredients'])
 
     all_ingredients = set()
-    for i in range(1, 75):  
-        all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
+    if data.shape[1] > 200 :
+        for i in range(1, 75):  
+            all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
+    
+    if data.shape[1] < 100 :
+        for i in range(1, 26):  
+            all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
-    # recipe_ingredients_df: 비어있는 레시피 X 식재료 df
+    # 레시피 식재료 Matrix 만들기 
     col_name = ['recipe_title'].append(list(all_ingredients))
-    recipe_ingredients_df = pd.DataFrame(columns=col_name)
+    recipe_ingredients_df = pd.DataFrame(columns=col_name) # 
 
     # 레시피 하나씩 붙이기 
     recipe_rows = []
     for idx, row in tqdm(data.iterrows(), total = data.shape[0]) : # tqdm으로 진행상황 확인
         recipe_data = {ingredient: 0.0 for ingredient in all_ingredients}  # 모든 식재료를 None으로 초기화
-        for i in range(1, 50):  
+        for i in range(1, 26):  
             ingredient = row[f'ingredient{i}']
             quantity = row[f'quantity{i}']
             unit = row[f'unit{i}']
             if pd.notna(ingredient) and pd.notna(quantity):
-                quantity_float = convert_fraction_to_float(quantity)
+                quantity_float = parse_quantity(quantity)
                 if quantity_float is not None:
                     unit_number = convert_unit_to_number(unit) if pd.notna(unit) else 1
                     recipe_data[ingredient] = quantity_float * unit_number
