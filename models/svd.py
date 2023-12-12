@@ -44,11 +44,16 @@ def load_matrix(data = 'ingred', n=1000):
 
 
 def matrix_decomposition(matrix, n = 100):
-    def normalize_matrix(input):
-        input = input.loc[:, (input  != 0.0).sum() >1] 
+    def normalize_recipe(input):
+        
+        input = input.loc[:, (input  != 0.0).sum() >1] # 1번 이상 등장한 식재료만 사용
         d1 = input.iloc[:,:1] # 타이틀
         d2 = input.iloc[:, 1:].apply(lambda x: x/max(x), axis = 0) # 정규화
-        return pd.concat([d1, d2], axis= 1)
+        df =pd.concat([d1, d2], axis= 1)
+
+
+        
+
     matrix = normalize_matrix(matrix)
     title = matrix.recipe_title
     df = matrix.drop(columns ='recipe_title').copy()

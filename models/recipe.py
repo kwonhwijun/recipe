@@ -188,7 +188,7 @@ def recipe_food_matrix(data):
             return float(1) # 비어있는 경우 1로 변환 
          
     # 단위를 g으로 : convert_unit_to_number('조금') = 10
-    def convert_unit_to_number(unit):
+    def parse_unit(unit):
         file_path = r"data\change.txt"
         unit_conversion = {}
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -206,7 +206,7 @@ def recipe_food_matrix(data):
             all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
     
     if data.shape[1] < 100 :
-        for i in range(1, 26):  
+        for i in range(1, (data.shape[1]-1)/3):  
             all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
     # 레시피 식재료 Matrix 만들기 
@@ -224,7 +224,7 @@ def recipe_food_matrix(data):
             if pd.notna(ingredient) and pd.notna(quantity):
                 quantity_float = parse_quantity(quantity)
                 if quantity_float is not None:
-                    unit_number = convert_unit_to_number(unit) if pd.notna(unit) else 1
+                    unit_number = parse_unit(unit) if pd.notna(unit) else 1
                     recipe_data[ingredient] = quantity_float * unit_number
         recipe_rows.append(recipe_data)
 
