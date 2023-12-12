@@ -26,3 +26,35 @@ def load_data(data = 'recipe', n=1000):
         return result
     
     else: pass
+
+
+
+
+def df2oracle(dataframe, table_name):
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'], dsn = config.DB_CONFIG['dsn'])
+
+    columns_info = ', '.join([f'"{col}" VARCHAR2(300)' for col in dataframe.columns.astype(str)])
+    # 테이블 생성
+    create_table_sql = f"CREATE TABLE {table_name} ({columns_info})"
+    exe = conn.cursor()
+    exe.execute(create_table_sql)
+    exe.close()
+    # oracle db에 insert 
+    def insert_into_oracle(dataframe, table_name, conn):    
+        exe = conn.cursor()    
+        
+        insert = [tuple(x) for x in dataframe.values]
+        exe.executemany(
+            f"INSERT INTO {table_name} VALUES ({','.join([':' + str(i+1) for i in range(len(dataframe.columns))])})",
+            insert)
+        
+        conn.commit()
+        exe.close()
+    
+    insert_into_oracle(dataframe, table_name, conn)
+    conn.close()
+
+data = pd.read_csv(r'C:\Users\HwijunKwon\github\recipe\models\data\info_list.csv')
+data.columns.astype(str)
+df2oracle(data, 'test2')

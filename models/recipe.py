@@ -187,7 +187,6 @@ def recipe_food_matrix(data):
         except ValueError:
             return float(1) # 비어있는 경우 1로 변환 
          
-        
     # 단위를 g으로 : convert_unit_to_number('조금') = 10
     def convert_unit_to_number(unit):
         file_path = r"data\change.txt"
