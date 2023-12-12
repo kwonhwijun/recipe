@@ -203,8 +203,6 @@ def parse_single_unit(unit):
         unit_conversion = {line.split()[0]: float(line.split()[1]) for line in file if line.split()[1].isdigit()}
     return unit_conversion.get(unit, 1)
 
-
-
 # 4. Matrix 변환
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
