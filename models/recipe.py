@@ -162,14 +162,46 @@ def process_ingredient(dataframe):
     return dataframe
 
 
-# 식재료 2개 만 있는 레시피는 의미 없다. => EDA 
-# 한번만 반영된 식재료는 제거 한다 (레시피도 같이) 
-#   EX) 콩고전통요리 만들기: 콩고옥수수 : 1 => 제거.
 
-# => 50번이상 등장한 식재료 목록 -> 각 행에 대해서 조회? 
+# 3-1. 식재료 양 처리
+def parse_quantity(dataframe):
+    for i in range(1, 25):
+        column_name = f'quantity{i}'
+        if column_name in dataframe.columns:
+            dataframe[column_name] = dataframe[column_name].apply(lambda x: parse_single_quantity(x))
+    return dataframe
 
+def parse_single_quantity(quantity):
+    if isinstance(quantity, float):
+        result = quantity  # 이미 실수인 경우 그대로 반환
+        return float(1) if pd.isna(result) else result  # NaN 값이면 1로 변환
 
+    if '~' in quantity:
+        numbers = re.findall(r'\d+\.?\d*', quantity)  # 숫자들을 찾음
+        numbers = [float(num) for num in numbers]  # 문자열을 실수로 변환
+        if len(numbers) == 0:
+            return float(2)  # 0으로 나누기를 방지하기 위해 2로 반환
+        return float(sum(numbers) / len(numbers))  # 평균 계산
+    try:
+        result =  float(quantity)  # 일반적인 경우, 숫자로 변환
+        return float(1) if pd.isna(result) else result  # NaN 값이면 1로 변환
+    except ValueError:
+        return float(1) # 비어있는 경우 1로 변환 
 
+# 3-2. 식재료 단위 처리 - 단위를 g으로 : parse_unit('조금') = 10
+def parse_unit(dataframe):
+    for i in range(1, 25):
+        column_name = f'unit{i}'
+        if column_name in dataframe.columns:
+            dataframe[column_name] = dataframe[column_name].apply(lambda x: parse_single_unit(x))
+    return dataframe
+
+def parse_single_unit(unit):
+    file_path = r"data\change.txt"
+    unit_conversion = {}
+    with open(file_path, 'r', encoding='utf-8') as file:
+        unit_conversion = {line.split()[0]: float(line.split()[1]) for line in file if line.split()[1].isdigit()}
+    return unit_conversion.get(unit, 1)
 
 
 
@@ -177,23 +209,6 @@ def process_ingredient(dataframe):
 def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
 
-    def parse_quantity(quantity):
-        if '~' in quantity:
-            numbers = re.findall(r'\d+\.?\d*', quantity)  # 숫자들을 찾음
-            numbers = [float(num) for num in numbers]  # 문자열을 실수로 변환
-            return float(sum(numbers) / len(numbers))  # 평균 계산
-        try:
-            return float(quantity)  # 일반적인 경우, 숫자로 변환
-        except ValueError:
-            return float(1) # 비어있는 경우 1로 변환 
-         
-    # 단위를 g으로 : convert_unit_to_number('조금') = 10
-    def parse_unit(unit):
-        file_path = r"data\change.txt"
-        unit_conversion = {}
-        with open(file_path, 'r', encoding='utf-8') as file:
-            unit_conversion = {line.split()[0]: float(line.split()[1]) for line in file if line.split()[1].isdigit()}
-        return unit_conversion.get(unit, 1)
     # all_ingredients: 모든 식재료 리스트
 
     ingredient_columns = data.filter(like='ingredient')
