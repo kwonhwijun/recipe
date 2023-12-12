@@ -166,11 +166,7 @@ def process_ingredient(dataframe):
 # 한번만 반영된 식재료는 제거 한다 (레시피도 같이) 
 #   EX) 콩고전통요리 만들기: 콩고옥수수 : 1 => 제거.
 
-# => 50번이상 등장한 식재료 목록 -> 각 행에 대해서 조회? 
-
-
-
-
+# => 50번이상 등장한 식재료 목록 -> 각 행에 대해서 조회?
 
 
 # 4. Matrix 변환
@@ -178,6 +174,7 @@ def recipe_food_matrix(data):
     data.index = range(len(data)) # index 초기화
 
     def parse_quantity(quantity):
+        
         if '~' in quantity:
             numbers = re.findall(r'\d+\.?\d*', quantity)  # 숫자들을 찾음
             numbers = [float(num) for num in numbers]  # 문자열을 실수로 변환
@@ -201,13 +198,9 @@ def recipe_food_matrix(data):
         data = data.drop(columns=['recipe_ingredients'])
 
     all_ingredients = set()
-    if data.shape[1] > 200 :
-        for i in range(1, 75):  
-            all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
-    
-    if data.shape[1] < 100 :
-        for i in range(1, (data.shape[1]-1)/3):  
-            all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
+    ingre_len = int((data.shape[1]-1)/3)
+    for i in range(1, ingre_len):  
+        all_ingredients.update(data[f'ingredient{i}'].dropna().unique())
 
     # 레시피 식재료 Matrix 만들기 
     col_name = ['recipe_title'].append(list(all_ingredients))
@@ -217,7 +210,7 @@ def recipe_food_matrix(data):
     recipe_rows = []
     for idx, row in tqdm(data.iterrows(), total = data.shape[0]) : # tqdm으로 진행상황 확인
         recipe_data = {ingredient: 0.0 for ingredient in all_ingredients}  # 모든 식재료를 None으로 초기화
-        for i in range(1, 26):  
+        for i in  range(1, ingre_len):  
             ingredient = row[f'ingredient{i}']
             quantity = row[f'quantity{i}']
             unit = row[f'unit{i}']
@@ -235,7 +228,7 @@ def recipe_food_matrix(data):
 
     # RECIPE_TITLE 컬럼을 젤 앞으로
     recipe_ingredients_df = recipe_ingredients_df[['recipe_title'] + [col for col in recipe_ingredients_df.columns if col != 'recipe_title']]
-
+    recipe_ingredients_df.to_csv(f'matrix/food_matrix_{len(data)}.csv')
     return recipe_ingredients_df
 
 #---------------------------------------------------------------------------------------------------#

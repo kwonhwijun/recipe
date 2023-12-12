@@ -57,8 +57,8 @@ def df2oracle(dataframe, table_name):
     insert_into_oracle(dataframe, table_name, conn)
     conn.close()
 
-data = pd.read_csv(r'models/data/ingd_list.csv')
+#data = pd.read_csv(r'models/data/ingd_list.csv')
 
-df2oracle(data, 'ingre_list3')
+#df2oracle(data, 'ingre_list3')
 
-data.head(5)
+#data.head(5)
