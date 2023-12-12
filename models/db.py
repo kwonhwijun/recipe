@@ -55,6 +55,6 @@ def df2oracle(dataframe, table_name):
     insert_into_oracle(dataframe, table_name, conn)
     conn.close()
 
-data = pd.read_csv(r'C:\Users\HwijunKwon\github\recipe\models\data\info_list.csv')
+data = pd.read_csv(r'models/data/info_list.csv')
 data.columns.astype(str)
 df2oracle(data, 'test2')
