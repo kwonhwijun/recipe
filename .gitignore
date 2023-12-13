@@ -19,3 +19,11 @@ models/recipe_pre.csv
 models/now_009.ipynb
 models/matrix/ingred__10000.csv
 models/matrix/nutri__10000.csv
+models/RecipeData (1).csv
+models/merge_df.ipynb
+models/unit_count.csv
+models/unit.csv
+models/final_recipe.csv
+models/final_hj/merge_df.ipynb
+models/final_hj/unit_count.csv
+models/final_hj/unit.csv

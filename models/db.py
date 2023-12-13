@@ -36,7 +36,7 @@ def df2oracle(dataframe, table_name):
     for i in list(dataframe.columns):
         cols.append(i.upper())
     dataframe.columns = cols
-    columns_info = ', '.join([f'"{col}" VARCHAR2(2000)' for col in dataframe.columns])
+    columns_info = ', '.join([f'"{col}" VARCHAR2(4000)' for col in dataframe.columns])
     # 테이블 생성
     create_table_sql = f"CREATE TABLE {table_name} ({columns_info})"
     exe = conn.cursor()
@@ -70,3 +70,9 @@ def oracle2df(table_name):
     result = pd.DataFrame(exe.fetchall(), columns=[col[0].lower() for col in exe.description])  # row와 column 이름을 가져와 DataFrame 생성
     conn.close() #실험 # 수정
     return result
+import oracledb as od
+def close():
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'], dsn = config.DB_CONFIG['dsn'])
+    conn.close()
+close()
