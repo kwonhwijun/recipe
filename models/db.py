@@ -58,7 +58,15 @@ def df2oracle(dataframe, table_name):
     conn.close()
 
 #data = pd.read_csv(r'models/data/ingd_list.csv')
-
 #df2oracle(data, 'ingre_list3')
-
 #data.head(5)
+
+# 오라클에서 데이터프레임을 불러오는 함수 : oracle2df('NUTRIENT_DATA_TABLE')
+def oracle2df(table_name):
+    od.init_oracle_client(lib_dir=r"C:\Program Files\Oracle\instantclient_21_12")
+    conn = od.connect(user = config.DB_CONFIG['user'], password = config.DB_CONFIG['password'], dsn = config.DB_CONFIG['dsn'])
+    exe = conn.cursor()
+    exe.execute(f'SELECT * FROM {table_name.upper()}')
+    result = pd.DataFrame(exe.fetchall(), columns=[col[0].lower() for col in exe.description])  # row와 column 이름을 가져와 DataFrame 생성
+    conn.close() #실험 # 수정
+    return result
