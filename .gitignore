@@ -27,3 +27,5 @@ models/final_recipe.csv
 models/final_hj/merge_df.ipynb
 models/final_hj/unit_count.csv
 models/final_hj/unit.csv
+data/RecipeData.csv
+hj/
