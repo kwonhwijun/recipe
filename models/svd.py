@@ -99,18 +99,20 @@ def draw_TSNE(title, recipe_vec, n = 0):
     plt.annotate(title[n], reduced_vec[n], size = 10)
     plt.scatter(reduced_vec[n, 0], reduced_vec[n, 1], c= 'red')
     # 가장 가까운 5개 레시피 찾아서 초록색으로 표시
-    def find_5idx(title, similarity, row_num = 0):
+    def find_5idx(title_list, similarity, row_num = 0):
         similarity_pd = pd.DataFrame(similarity, columns=title)
         sim_list = similarity_pd.loc[row_num].sort_values(ascending= False)[1:6]
         idx = []
         for sim_title in list(sim_list.index) :
             idx.extend(list(title.index[title == sim_title]))
+        return idx
     output = []
-    for i in find_5idx(title, sim_recipe, n):
+    print(find_5idx(title_list = title, similarity= sim_recipe, row_num = n))
+    for i in find_5idx(title_list = title, similarity= sim_recipe, row_num = n):
         plt.scatter(reduced_vec[i, 0], reduced_vec[i, 1], c= 'blue')
         output.append(title[i])
-        print(title[i])
     return output
+    
 
 
 def nutri_svd(method, df, n): # method = svd라이브러리 선택df = 입력할 테이블, n = 차원수
